@@ -1,0 +1,502 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1TIpdT1nD8OJRd07HAw5z-jsdXnfKPOjDUDCNpt_Z6v4/edit?gid=1767212848#gid=1767212848",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1767212848,
+          "mode": "list",
+          "cachedResultName": "Form responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TIpdT1nD8OJRd07HAw5z-jsdXnfKPOjDUDCNpt_Z6v4/edit#gid=1767212848"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        64
+      ],
+      "id": "b46fa732-d43e-44c6-bb67-0400c5519ff0",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "hK7yVDwNFS4x8WkU",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "574aaa04-3c81-4cc2-bf7c-244c870ff382",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Done",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        64
+      ],
+      "id": "1b1d81a6-d508-4e10-b127-0d0cd844bc42",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.31.242:3001/api/createUser",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "email",
+              "value": "={{ $json['Email(This will be your username for the mobile app.)'] }}"
+            },
+            {
+              "name": "password",
+              "value": "Pass1234"
+            },
+            {
+              "name": "firstName",
+              "value": "={{ $json['First Name'] }}"
+            },
+            {
+              "name": "lastName",
+              "value": "={{ $json['Last Name'] }}"
+            },
+            {
+              "name": "role",
+              "value": "student"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 10000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        64
+      ],
+      "id": "ee15cb55-b23f-47e9-b24a-8a2b32f7a5bd",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6d465e93-8b36-4268-8260-65603a754197",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        64
+      ],
+      "id": "f2e254ab-71d1-4389-b59e-b99866a7318c",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        64
+      ],
+      "id": "78f97021-6758-45cb-9207-f0693d79cff8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1TIpdT1nD8OJRd07HAw5z-jsdXnfKPOjDUDCNpt_Z6v4/edit?gid=1767212848#gid=1767212848",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1767212848,
+          "mode": "list",
+          "cachedResultName": "Form responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TIpdT1nD8OJRd07HAw5z-jsdXnfKPOjDUDCNpt_Z6v4/edit#gid=1767212848"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email(This will be your username for the mobile app.)": "={{ $json.user.email }}",
+            "First Name": "={{ $('If').item.json['First Name'] }}",
+            "Status": "={{ $json.success ? \"Done\" : \"Failed\" }}"
+          },
+          "matchingColumns": [
+            "First Name"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "First Name",
+              "displayName": "First Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Last Name",
+              "displayName": "Last Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email(This will be your username for the mobile app.)",
+              "displayName": "Email(This will be your username for the mobile app.)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone Number(with country code )",
+              "displayName": "Phone Number(with country code )",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Your Join Date in Briffini Academy",
+              "displayName": "Your Join Date in Briffini Academy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Your Practical Exam Date",
+              "displayName": "Your Practical Exam Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Your Subscription period",
+              "displayName": "Your Subscription period",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Which device are you using?",
+              "displayName": "Which device are you using?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Your Agency Name",
+              "displayName": "Your Agency Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Your Prospect Employer Name (if not, Give None)",
+              "displayName": "Your Prospect Employer Name (if not, Give None)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "                      Terms And Conditions\nWelcome to Xfini Academy for Nurses. By accessing this platform and engaging with any of its educational content, you acknowledge and agree to the following legally binding terms. All material provided within this platform—including but not limited to videos, audio recordings, presentation slides, written documents, illustrations, and any supporting digital or printed media—is the exclusive intellectual property of Xfini Academy for Nurses and its contributors. These materials are protected under national and international copyright legislation, including the Copyright and Related Rights Act, 2000 of Ireland and The Copyright Act, 1957 (as amended) of India.\n\nThis educational content is provided strictly for personal learning and professional development. Any attempt to download, copy, reproduce, screen-record, distribute, transmit, alter, adapt, translate, publicly display, or upload any part of the content to third-party platforms or social networks constitutes an infringement of copyright law. Sharing materials in any form, including via email, messaging services, cloud storage, or learning forums, without explicit, prior written consent from Xfini Academy for Nurses is strictly prohibited.\n\nSuch unauthorised actions are considered serious offences and may result in immediate revocation of access to all resources and services offered by Xfini Academy for Nurses. Furthermore, violators may face civil and criminal liability. Under Section 140 to 146 of the Irish Copyright and Related Rights Act, 2000, and Sections 63 to 70 of the Indian Copyright Act, 1957, copyright infringement may lead to legal proceedings, substantial financial penalties, and, in certain cases, imprisonment.\n\nAccess to the online classes and the application will be available only until your exam date. After that, all access will be cancelled immediately, regardless of whether you have taken a 16-day, 1-month, or 2-month course.Refunds will be processed only upon submission of valid supporting documents, and the refundable amount will be calculated after deducting the fees for the classes already attended and any applicable administrative charges.\n\nBy proceeding to access and use this platform, you confirm your understanding of and commitment to upholding these copyright conditions. You agree to respect the creative and intellectual efforts that underpin the development of these educational resources. If you are uncertain about any aspect of acceptable usage or if you wish to obtain permission for specific purposes, we urge you to contact  Xfini Academy for Nurses directly.\n\nWe thank you for your cooperation in safeguarding the integrity of our educational assets and for contributing to a culture of respect, responsibility, and legal compliance.",
+              "displayName": "                      Terms And Conditions\nWelcome to Xfini Academy for Nurses. By accessing this platform and engaging with any of its educational content, you acknowledge and agree to the following legally binding terms. All material provided within this platform—including but not limited to videos, audio recordings, presentation slides, written documents, illustrations, and any supporting digital or printed media—is the exclusive intellectual property of Xfini Academy for Nurses and its contributors. These materials are protected under national and international copyright legislation, including the Copyright and Related Rights Act, 2000 of Ireland and The Copyright Act, 1957 (as amended) of India.\n\nThis educational content is provided strictly for personal learning and professional development. Any attempt to download, copy, reproduce, screen-record, distribute, transmit, alter, adapt, translate, publicly display, or upload any part of the content to third-party platforms or social networks constitutes an infringement of copyright law. Sharing materials in any form, including via email, messaging services, cloud storage, or learning forums, without explicit, prior written consent from Xfini Academy for Nurses is strictly prohibited.\n\nSuch unauthorised actions are considered serious offences and may result in immediate revocation of access to all resources and services offered by Xfini Academy for Nurses. Furthermore, violators may face civil and criminal liability. Under Section 140 to 146 of the Irish Copyright and Related Rights Act, 2000, and Sections 63 to 70 of the Indian Copyright Act, 1957, copyright infringement may lead to legal proceedings, substantial financial penalties, and, in certain cases, imprisonment.\n\nAccess to the online classes and the application will be available only until your exam date. After that, all access will be cancelled immediately, regardless of whether you have taken a 16-day, 1-month, or 2-month course.Refunds will be processed only upon submission of valid supporting documents, and the refundable amount will be calculated after deducting the fees for the classes already attended and any applicable administrative charges.\n\nBy proceeding to access and use this platform, you confirm your understanding of and commitment to upholding these copyright conditions. You agree to respect the creative and intellectual efforts that underpin the development of these educational resources. If you are uncertain about any aspect of acceptable usage or if you wish to obtain permission for specific purposes, we urge you to contact  Xfini Academy for Nurses directly.\n\nWe thank you for your cooperation in safeguarding the integrity of our educational assets and for contributing to a culture of respect, responsibility, and legal compliance.",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Your Recruiter’s Name(if not, give None)",
+              "displayName": "Your Recruiter’s Name(if not, give None)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Column 11",
+              "displayName": "Column 11",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "success",
+              "displayName": "success",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "user",
+              "displayName": "user",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        64
+      ],
+      "id": "7f8c9329-d0b1-4985-aa4c-58e7faf86060",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Xqu19r2TYvpCVeRj",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "rahulbushi69@gmail.com",
+        "toEmail": "={{ $('Google Sheets Trigger').item.json['Email(This will be your username for the mobile app.)'] }}",
+        "subject": "Account Created For Xfini Academy New Admission",
+        "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Xfini Academy Admission</title>\n</head>\n\n<body style=\"margin:0;padding:0;background-color:#f4f6f9;font-family:Arial,sans-serif;\">\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#f4f6f9;padding:30px 0;\">\n<tr>\n<td align=\"center\">\n\n<table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#ffffff;border-radius:12px;overflow:hidden;\">\n\n<!-- Header -->\n<tr>\n<td align=\"center\" style=\"background:#0d6efd;padding:35px 20px;\">\n\n<h1 style=\"margin:0;color:#ffffff;font-size:30px;\">\nWelcome to Xfini Academy 🎉\n</h1>\n\n<p style=\"margin:12px 0 0;color:#dbe8ff;font-size:16px;\">\nYour admission has been successfully completed\n</p>\n\n</td>\n</tr>\n\n<!-- Body -->\n<tr>\n<td style=\"padding:40px 35px;color:#333333;\">\n\n<p style=\"font-size:16px;margin-top:0;\">\nHello\n<strong>\n{{ $('Google Sheets Trigger').item.json['First Name'] }}\n</strong>,\n</p>\n\n<p style=\"font-size:15px;line-height:1.8;\">\nWelcome to <strong>Xfini Academy</strong>.\nYour student account has been created successfully.\nPlease find your login credentials below.\n</p>\n\n<!-- Login Details -->\n<table width=\"100%\" cellpadding=\"12\" cellspacing=\"0\"\nstyle=\"margin-top:25px;border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb;\">\n\n<tr>\n<td width=\"35%\" style=\"font-weight:bold;\">\nUsername\n</td>\n\n<td>\n{{ $('Google Sheets Trigger').item.json['Email(This will be your username for the mobile app.)'] }}\n</td>\n</tr>\n\n<tr>\n<td style=\"font-weight:bold;\">\nPassword\n</td>\n\n<td>\nPass1234\n</td>\n</tr>\n\n<tr>\n<td style=\"font-weight:bold;\">\nDevice\n</td>\n\n<td>\n{{ $('Google Sheets Trigger').item.json['Which device are you using?'] }}\n</td>\n</tr>\n\n</table>\n\n<!-- Download Button -->\n<div style=\"margin-top:35px;text-align:center;\">\n\n<p style=\"font-size:16px;margin-bottom:20px;\">\nDownload the Xfini Academy App\n</p>\n\n<a href=\"{{ $('Google Sheets Trigger').item.json['Which device are you using?'] === 'Android' ? 'https://drive.google.com/file/d/1l1_do3eqXviEfTijWFD_usiV9qOleOpc/view?usp=sharing' : 'https://apps.apple.com/us/app/xfini-academy/id6749449976' }}\"\nstyle=\"background-color:#0d6efd;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;display:inline-block;font-size:16px;font-weight:bold;\">\n\n{{ $('Google Sheets Trigger').item.json['Which device are you using?'] === 'Android' ? 'Download Android App' : 'Download iPhone App' }}\n\n</a>\n\n</div>\n\n<!-- Instructions -->\n<div style=\"margin-top:40px;\">\n\n<h3 style=\"margin-bottom:10px;\">\nLogin Instructions\n</h3>\n\n<ul style=\"padding-left:20px;line-height:1.8;font-size:15px;\">\n<li>Install the mobile application using the button above.</li>\n<li>Login using your username and password.</li>\n<li>Change your password after first login for security.</li>\n</ul>\n\n</div>\n\n<!-- Support -->\n<div style=\"margin-top:35px;\">\n\n<p style=\"font-size:15px;line-height:1.8;\">\nIf you face any issues while logging in,\nplease contact the academy support team.\n</p>\n\n<p style=\"margin-top:30px;font-size:15px;\">\nRegards,<br>\n<strong>Xfini Academy Team</strong>\n</p>\n\n</div>\n\n</td>\n</tr>\n\n<!-- Footer -->\n<tr>\n<td align=\"center\"\nstyle=\"background:#f3f4f6;padding:20px;font-size:13px;color:#6b7280;\">\n\n© 2026 Xfini Academy. All Rights Reserved.\n\n</td>\n</tr>\n\n</table>\n\n</td>\n</tr>\n</table>\n\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1328,
+        64
+      ],
+      "id": "3bb13830-782b-4ba3-adac-90fcb0a66159",
+      "name": "Send an Email",
+      "webhookId": "b692e9de-7029-4e93-8dff-0a3a58a6944e",
+      "credentials": {
+        "smtp": {
+          "id": "qjvVX8E8ri7qiJT3",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e18d2472-d771-4bcd-9c5c-28045597d2ad",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1eed459817683b24632383594d62cd681204e6b89aeb44bce3364755a14f158f"
+  },
+  "id": "16ainkEVeVNJDccJ",
+  "tags": []
+}
