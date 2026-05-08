@@ -42,6 +42,21 @@ npm run dev
 
 Server starts on `http://localhost:3001` by default.
 
+## Docker
+
+`serviceAccount.json` and `.env` are excluded from the image and must be mounted at runtime.
+
+```bash
+# Build
+docker build -t xfini-user-api .
+
+# Run
+docker run -p 3001:3001 \
+  --env-file .env \
+  -v $(pwd)/serviceAccount.json:/app/serviceAccount.json:ro \
+  xfini-user-api
+```
+
 ---
 
 ## API Endpoints
