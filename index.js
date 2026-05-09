@@ -1,16 +1,13 @@
 require('dotenv').config();
 const express = require('express');
 const admin = require('firebase-admin');
-const fetch = require('node-fetch');
 const serviceAccount = require('./serviceAccount.json');
-
-const FIREBASE_API_KEY = 'AIzaSyCS0ZNzHsLBUWTgr-O0UkvflZVNC25V9OI';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
+
+const EXCLUDED_COURSE_IDS = ['GEN-0220-HM5q', 'GEN-0219-q9Gd', 'GEN-0105-tg6v'];
 
 const app = express();
 app.use(express.json());
@@ -67,100 +64,148 @@ app.post('/api/getToken', async (req, res) => {
   }
 });
 
-// Cache token for 55 minutes (token expires after 60)
-let cachedToken = null;
-let tokenExpiry = 0;
 
-async function getAdminToken() {
-  if (cachedToken && Date.now() < tokenExpiry) return cachedToken;
+// GET /health
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
-  const response = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD, returnSecureToken: true })
-    }
-  );
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error?.message || 'Sign-in failed.');
+// POST /create-student
+app.post('/create-student', async (req, res) => {
+  const { firstName, lastName, planmonths, role, password } = req.body;
+  const email = typeof req.body.email === 'string' ? req.body.email.trim() : '';
 
-  cachedToken = data.idToken;
-  tokenExpiry = Date.now() + 55 * 60 * 1000;
-  return cachedToken;
-}
-
-// POST /api/createUser
-app.post('/api/createUser', async (req, res) => {
-  if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-    return res.status(500).json({ success: false, error: 'ADMIN_EMAIL or ADMIN_PASSWORD not set in .env' });
+  // Step 1 — Validate input
+  if (!firstName || !lastName || !email || !planmonths || !role || !password) {
+    return res.status(400).json({ success: false, error: 'All fields are required: firstName, lastName, email, planmonths, role, password.', code: 'INVALID_INPUT' });
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ success: false, error: 'Invalid email address format.', code: 'INVALID_INPUT' });
+  }
+  if (!['student', 'admin'].includes(role)) {
+    return res.status(400).json({ success: false, error: 'role must be "student" or "admin".', code: 'INVALID_INPUT' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ success: false, error: 'password must be at least 6 characters.', code: 'INVALID_INPUT' });
+  }
+  const months = parseInt(planmonths, 10);
+  if (isNaN(months) || months <= 0) {
+    return res.status(400).json({ success: false, error: 'Invalid planmonths value.', code: 'INVALID_INPUT' });
   }
 
-  // Auto-fetch token internally using .env credentials
-  let callerUid;
-  try {
-    const idToken = await getAdminToken();
-    const decoded = await admin.auth().verifyIdToken(idToken);
-    callerUid = decoded.uid;
-  } catch (err) {
-    return res.status(401).json({ success: false, error: `Auth failed: ${err.message}` });
-  }
-
-  // Verify the .env admin user has admin role in Firestore
-  const callerDoc = await admin.firestore().collection('users').doc(callerUid).get();
-  if (!callerDoc.exists || callerDoc.data().role !== 'admin') {
-    return res.status(403).json({ success: false, error: 'The credentials in .env do not belong to an admin user.' });
-  }
-
-  const { password, role } = req.body;
-  const email = req.body.email?.trim();
   const toProper = str => str.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-  const firstName = toProper(req.body.firstName || '');
-  const lastName = toProper(req.body.lastName || '');
-  const displayName = `${firstName} ${lastName}`.trim();
+  const displayName = `${toProper(firstName)} ${toProper(lastName)}`;
 
-  if (!email || !password || !displayName || !role) {
-    return res.status(400).json({ success: false, error: 'All fields are required: email, password, displayName, role.' });
-  }
-
-  if (!['admin', 'student'].includes(role)) {
-    return res.status(400).json({ success: false, error: "Role must be 'admin' or 'student'." });
-  }
-
+  // Step 2 — Resolve subscription plan from Firestore
+  let planId, planName, price;
   try {
-    const userRecord = await admin.auth().createUser({ email, password, displayName, emailVerified: false });
+    const plansSnap = await admin.firestore()
+      .collection('subscriptionPlans')
+      .where('name', '==', planmonths)
+      .where('isActive', '==', true)
+      .limit(1)
+      .get();
 
-    await admin.firestore().collection('users').doc(userRecord.uid).set({
+    if (plansSnap.empty) {
+      return res.status(400).json({ success: false, error: `No active plan found with name "${planmonths}".`, code: 'PLAN_NOT_FOUND' });
+    }
+
+    const planDoc = plansSnap.docs[0];
+    planId = planDoc.id;
+    ({ name: planName, price } = planDoc.data());
+  } catch (err) {
+    return res.status(500).json({ success: false, error: `Failed to fetch plan: ${err.message}`, code: 'FIRESTORE_FAILED' });
+  }
+
+  // Step 3 — Get active course IDs
+  let assignedCourseIds = [];
+  try {
+    const coursesSnap = await admin.firestore()
+      .collection('courses')
+      .where('isActive', '==', true)
+      .get();
+    assignedCourseIds = coursesSnap.docs.map(d => d.id).filter(id => !EXCLUDED_COURSE_IDS.includes(id));
+  } catch (err) {
+    return res.status(500).json({ success: false, error: `Failed to fetch courses: ${err.message}`, code: 'FIRESTORE_FAILED' });
+  }
+
+  // Steps 4–8 — Auth + Firestore writes (cleanup on failure)
+  let uid;
+  try {
+    // Step 4 — Create Firebase Auth user
+    const userRecord = await admin.auth().createUser({ email, password, displayName });
+    uid = userRecord.uid;
+
+    // Step 5 — Write users/{uid}
+    await admin.firestore().collection('users').doc(uid).set({
       email,
       displayName,
       role,
       assignedModules: [],
       assignedCourseIds: [],
+      deviceRestriction: {
+        enabled: true,
+        registeredDeviceId: null,
+        registeredAt: null
+      },
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
+    // Step 6 — Write subscriptions
+    const now = new Date();
+    const endDate = new Date(now);
+    endDate.setMonth(endDate.getMonth() + months);
+
+    const subscriptionRef = await admin.firestore().collection('subscriptions').add({
+      userId: uid,
+      planId,
+      planName,
+      startDate: admin.firestore.Timestamp.fromDate(now),
+      endDate: admin.firestore.Timestamp.fromDate(endDate),
+      status: 'active',
+      price,
+      notificationsSent: {
+        studentPreExpiry: false,
+        adminPreExpiry: false
+      },
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Step 7 — Update users/{uid} with course IDs
+    await admin.firestore().collection('users').doc(uid).update({
+      assignedCourseIds,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Step 8 — Set custom claims (non-fatal)
     try {
-      await admin.auth().setCustomUserClaims(userRecord.uid, { role, assignedModules: [], assignedCourseIds: [] });
+      await admin.auth().setCustomUserClaims(uid, { role, assignedCourseIds });
     } catch (e) {
       console.warn('Custom claims failed (non-fatal):', e.message);
     }
 
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
-      message: 'User created successfully.',
-      user: { uid: userRecord.uid, email: userRecord.email, displayName: userRecord.displayName, role }
+      userId: uid,
+      email,
+      displayName,
+      password,
+      role,
+      planName,
+      planId,
+      subscriptionId: subscriptionRef.id,
+      assignedCourses: assignedCourseIds.length,
+      endDate: endDate.toISOString()
     });
 
   } catch (error) {
-    if (error.code === 'auth/email-already-exists') {
-      return res.status(409).json({ success: false, error: 'A user with this email already exists.' });
-    } else if (error.code === 'auth/invalid-email') {
-      return res.status(400).json({ success: false, error: 'Invalid email address.' });
-    } else if (['auth/invalid-password', 'auth/weak-password'].includes(error.code)) {
-      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters.' });
+    if (uid) {
+      try { await admin.auth().deleteUser(uid); } catch (_) {}
     }
-    return res.status(500).json({ success: false, error: `Failed to create user: ${error.message}` });
+    if (['auth/email-already-exists', 'auth/invalid-email', 'auth/invalid-password', 'auth/weak-password'].includes(error.code)) {
+      return res.status(400).json({ success: false, error: error.message, code: 'AUTH_FAILED' });
+    }
+    return res.status(500).json({ success: false, error: `Failed to create student: ${error.message}`, code: 'FIRESTORE_FAILED' });
   }
 });
 
