@@ -9,7 +9,6 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
 
-const EXCLUDED_COURSE_IDS = ['GEN-0220-HM5q', 'GEN-0219-q9Gd', 'GEN-0105-tg6v'];
 
 const app = express();
 app.use(express.json());
@@ -124,7 +123,7 @@ app.post('/create-student', async (req, res) => {
       .collection('courses')
       .where('isActive', '==', true)
       .get();
-    assignedCourseIds = coursesSnap.docs.map(d => d.id).filter(id => !EXCLUDED_COURSE_IDS.includes(id));
+    assignedCourseIds = coursesSnap.docs.filter(d => !d.data().isTest).map(d => d.id);
   } catch (err) {
     return res.status(500).json({ success: false, error: `Failed to fetch courses: ${err.message}`, code: 'FIRESTORE_FAILED' });
   }
