@@ -204,12 +204,14 @@ app.post('/create-student', async (req, res) => {
     if (uid) {
       try { await admin.auth().deleteUser(uid); } catch (_) {}
     }
-    if (['auth/email-already-exists', 'auth/invalid-email', 'auth/invalid-password', 'auth/weak-password'].includes(error.code)) {
-      return res.status(400).json({ success: false, error: error.message, code: 'AUTH_FAILED' });
-    }
-    return res.status(500).json({ success: false, error: `Failed to create student: ${error.message}`, code: 'FIRESTORE_FAILED' });
+    console.error(error);
+    return res.status(400).json({
+      success: false,
+      code: error.code || 'AUTH_FAILED',
+      error: error.message || 'Unknown error'
+    });
   }
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Xfini user API running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Xfini Academy User API Server Running on http://localhost:${PORT}`));

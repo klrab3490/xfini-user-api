@@ -3,25 +3,52 @@ services:
     build: .
     ports:
       - "5677:3001"
-    env_file:
-      - .env
+    environment:
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      PORT: ${PORT:-3001}
+      FIREBASE_CREDENTIALS: ${FIREBASE_CREDENTIALS}
     volumes:
       - ./serviceAccount.json:/app/serviceAccount.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    command: http --url=${NGROK_DOMAIN} http://n8n:443
+    ports:
+      - "4040:4040"
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    depends_on:
+      n8n:
+        condition: service_healthy
     restart: unless-stopped
 
   n8n:
     image: n8nio/n8n:latest
     ports:
-      - "5678:5678"
+      - "5678:443"
     environment:
-      N8N_HOST: localhost
-      N8N_PORT: 5678
-      N8N_PROTOCOL: http
-      WEBHOOK_URL: http://localhost:5678
+      N8N_HOST: ${NGROK_DOMAIN}
+      N8N_PORT: 443
+      N8N_PROTOCOL: https
+      WEBHOOK_URL: https://${NGROK_DOMAIN}
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
       - xfini-user-api
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 443 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
     restart: unless-stopped
 
 volumes:
