@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const admin = require('firebase-admin');
 
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY;
@@ -16,6 +17,12 @@ admin.initializeApp({
 
 const app = express();
 app.use(express.json());
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 100,
+  standardHeaders: true,
+  legacyHeaders: false
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -70,6 +77,16 @@ app.post('/api/getToken', async (req, res) => {
 });
 
 
+// Linear-time email check (no backtracking-prone regex) — avoids ReDoS on attacker-controlled input.
+function isValidEmail(email) {
+  if (/\s/.test(email)) return false;
+  const at = email.indexOf('@');
+  if (at <= 0 || at !== email.lastIndexOf('@')) return false;
+  const domain = email.slice(at + 1);
+  const dot = domain.indexOf('.');
+  return dot > 0 && dot < domain.length - 1;
+}
+
 // GET /health
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
@@ -82,7 +99,7 @@ app.post('/create-student', async (req, res) => {
   if (!firstName || !lastName || !email || !planmonths || !role) {
     return res.status(400).json({ success: false, error: 'All fields are required: firstName, lastName, email, planmonths, role.', code: 'INVALID_INPUT' });
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!isValidEmail(email)) {
     return res.status(400).json({ success: false, error: 'Invalid email address format.', code: 'INVALID_INPUT' });
   }
   if (!['student', 'admin'].includes(role)) {
@@ -216,4 +233,8 @@ app.post('/create-student', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Xfini Academy User API Server Running on http://localhost:${PORT}`));
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`Xfini Academy User API Server Running on http://localhost:${PORT}`));
+}
+
+module.exports = app;

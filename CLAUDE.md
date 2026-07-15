@@ -16,9 +16,10 @@ Standalone Express REST API for Xfini student creation, called from n8n. Backed 
 ```bash
 npm run dev      # start with nodemon (auto-restart on change)
 npm start        # production start
+npm test         # run the node:test suite (test/api.test.js)
 ```
 
-No test suite exists. Manual testing via curl or Postman against `http://localhost:3001`.
+`test/api.test.js` mocks `firebase-admin` (via `node --experimental-test-module-mocks`) and exercises the Express app in-process — no real Firebase project needed. Runs in CI on every push/PR via `.github/workflows/test.yml`. For anything the suite doesn't cover, fall back to manual testing via curl or Postman against `http://localhost:3001`.
 
 ## Docker Compose
 
