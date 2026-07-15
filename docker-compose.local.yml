@@ -11,6 +11,7 @@ services:
       FIREBASE_CREDENTIALS: ${FIREBASE_CREDENTIALS:-}
     volumes:
       - ./serviceAccount.json:/app/serviceAccount.json:ro
+      - xfini_stats_data:/app/data
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
       interval: 10s
@@ -54,3 +55,4 @@ services:
 
 volumes:
   n8n_data:
+  xfini_stats_data:
