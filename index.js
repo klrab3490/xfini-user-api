@@ -1,7 +1,31 @@
 require('dotenv').config();
+const fs = require('node:fs');
+const path = require('node:path');
+const { DatabaseSync } = require('node:sqlite');
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const admin = require('firebase-admin');
+
+const statsDbPath = process.env.STATS_DB_PATH || path.join(__dirname, 'data', 'stats.db');
+fs.mkdirSync(path.dirname(statsDbPath), { recursive: true });
+const statsDb = new DatabaseSync(statsDbPath);
+statsDb.exec(`
+  CREATE TABLE IF NOT EXISTS api_stats (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    path TEXT NOT NULL,
+    success INTEGER NOT NULL,
+    status_code INTEGER NOT NULL,
+    created_at TEXT NOT NULL
+  )
+`);
+const recordStat = statsDb.prepare('INSERT INTO api_stats (path, success, status_code, created_at) VALUES (?, ?, ?, ?)');
+const countStats = statsDb.prepare(`
+  SELECT
+    SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) AS created,
+    SUM(CASE WHEN success = 0 THEN 1 ELSE 0 END) AS failed
+  FROM api_stats
+  WHERE path = ? AND created_at >= ?
+`);
 
 const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -37,6 +61,14 @@ app.use((req, res, next) => {
     const reset = '\x1b[0m';
     const label = status < 400 ? 'SUCCESS' : 'FAILED';
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} → ${color}${status} ${label}${reset} (${ms}ms)`);
+
+    if (req.path === '/create-student') {
+      try {
+        recordStat.run(req.path, status < 400 ? 1 : 0, status, new Date().toISOString());
+      } catch (err) {
+        console.error('Failed to record stat:', err.message);
+      }
+    }
   });
 
   next();
@@ -89,6 +121,26 @@ function isValidEmail(email) {
 
 // GET /health
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+// GET /stats — /create-student created vs. failed counts, today and last 7 days
+app.get('/stats', (req, res) => {
+  try {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(startOfDay);
+    startOfWeek.setDate(startOfWeek.getDate() - 6);
+
+    const zeroIfNull = row => ({ created: row.created || 0, failed: row.failed || 0 });
+
+    res.json({
+      success: true,
+      today: zeroIfNull(countStats.get('/create-student', startOfDay.toISOString())),
+      last7Days: zeroIfNull(countStats.get('/create-student', startOfWeek.toISOString()))
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: `Failed to fetch stats: ${err.message}` });
+  }
+});
 
 // POST /create-student
 app.post('/create-student', async (req, res) => {

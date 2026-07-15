@@ -8,6 +8,7 @@ process.env.FIREBASE_CREDENTIALS = JSON.stringify({
 process.env.ADMIN_EMAIL = '';
 process.env.ADMIN_PASSWORD = '';
 process.env.FIREBASE_API_KEY = 'test-api-key';
+process.env.STATS_DB_PATH = ':memory:';
 
 const { test, mock, before, after } = require('node:test');
 const assert = require('node:assert/strict');
@@ -68,7 +69,7 @@ const firestoreFake = () => ({
     throw new Error(`Unexpected collection: ${name}`);
   }
 });
-firestoreFake.FieldValue = { serverTimestamp: () => 'SERVER_TIMESTAMP' };
+firestoreFake.FieldValue = { serverTimestamp: () => ({ toDate: () => new Date() }) };
 firestoreFake.Timestamp = { fromDate: date => ({ toDate: () => date }) };
 
 let createdUsers = [];
@@ -206,4 +207,16 @@ test('POST /api/getToken fails without admin credentials configured', async () =
 
   assert.equal(res.status, 500);
   assert.equal(body.success, false);
+});
+
+test('GET /stats reports created vs. failed /create-student attempts', async () => {
+  // Every prior /create-student test in this file recorded a stat: 6 failed, 1 created.
+  const res = await fetch(`${baseUrl}/stats`);
+  const body = await res.json();
+
+  assert.equal(res.status, 200);
+  assert.equal(body.success, true);
+  assert.equal(body.today.created, 1);
+  assert.equal(body.today.failed, 6);
+  assert.deepEqual(body.last7Days, body.today);
 });
