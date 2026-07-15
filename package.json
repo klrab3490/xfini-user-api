@@ -15,9 +15,13 @@
     "firebase-admin": "^14.1.0"
   },
   "overrides": {
-    "uuid": "^14.0.0"
+    "uuid": "^14.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
+  },
+  "allowScripts": {
+    "@firebase/util@1.15.1": true,
+    "protobufjs@7.6.5": true
   }
 }
