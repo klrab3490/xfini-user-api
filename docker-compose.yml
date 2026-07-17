@@ -9,6 +9,7 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       PORT: ${PORT:-3001}
+      TZ: Asia/Kolkata
     volumes:
       - ./serviceAccount.json:/app/serviceAccount.json:ro
       - xfini_stats_data:/app/data
@@ -40,7 +41,7 @@ services:
 
   ngrok:
     image: ngrok/ngrok:latest
-    command: http --url=${NGROK_DOMAIN} http://n8n:443
+    command: http --url=${NGROK_DOMAIN} --request-header-add "ngrok-skip-browser-warning:true" http://n8n:443
     ports:
       - '4040:4040'
     environment:
@@ -58,7 +59,9 @@ services:
       N8N_HOST: ${NGROK_DOMAIN}
       N8N_PORT: 443
       N8N_PROTOCOL: https
-      WEBHOOK_URL: https://${NGROK_DOMAIN}
+      N8N_WEBHOOK_URL: https://${NGROK_DOMAIN}
+      GENERIC_TIMEZONE: Asia/Kolkata
+      TZ: Asia/Kolkata
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
