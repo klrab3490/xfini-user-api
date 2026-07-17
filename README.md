@@ -40,16 +40,16 @@ Server starts on `http://localhost:3001` by default.
 
 ## Environment Variables
 
-| Variable | Required | Description |
-| --- | --- | --- |
-| `ADMIN_EMAIL` | Yes | Firebase admin account email |
-| `ADMIN_PASSWORD` | Yes | Firebase admin account password |
-| `FIREBASE_API_KEY` | Yes | Firebase Web API key, used by `/api/getToken` |
-| `PORT` | No | Port to listen on (default: `3001`) |
-| `STATS_DB_PATH` | No | SQLite file backing `/stats` (default: `./data/stats.db`) |
-| `FIREBASE_CREDENTIALS` | Docker only | Full `serviceAccount.json` as a single-line JSON string |
-| `NGROK_AUTHTOKEN` | Docker only | ngrok auth token |
-| `NGROK_DOMAIN` | Docker only | Static ngrok domain (e.g. `foo.ngrok-free.app`) |
+| Variable               | Required    | Description                                               |
+| ---------------------- | ----------- | --------------------------------------------------------- |
+| `ADMIN_EMAIL`          | Yes         | Firebase admin account email                              |
+| `ADMIN_PASSWORD`       | Yes         | Firebase admin account password                           |
+| `FIREBASE_API_KEY`     | Yes         | Firebase Web API key, used by `/api/getToken`             |
+| `PORT`                 | No          | Port to listen on (default: `3001`)                       |
+| `STATS_DB_PATH`        | No          | SQLite file backing `/stats` (default: `./data/stats.db`) |
+| `FIREBASE_CREDENTIALS` | Docker only | Full `serviceAccount.json` as a single-line JSON string   |
+| `NGROK_AUTHTOKEN`      | Docker only | ngrok auth token                                          |
+| `NGROK_DOMAIN`         | Docker only | Static ngrok domain (e.g. `foo.ngrok-free.app`)           |
 
 ## Docker (standalone)
 
@@ -83,11 +83,11 @@ docker run -p 3001:3001 \
 
 **Available tags:**
 
-| Tag | When pushed |
-| --- | --- |
-| `main` | Every push to `main` branch |
-| `sha-<commit>` | Every push (pinned to exact commit) |
-| `1.2.3` / `1.2` | When a `v1.2.3` git tag is pushed |
+| Tag             | When pushed                         |
+| --------------- | ----------------------------------- |
+| `main`          | Every push to `main` branch         |
+| `sha-<commit>`  | Every push (pinned to exact commit) |
+| `1.2.3` / `1.2` | When a `v1.2.3` git tag is pushed   |
 
 The API will be available at `http://localhost:3001`.
 
@@ -101,11 +101,11 @@ Starts three services: the API, n8n (HTTPS), and ngrok (public tunnel for n8n).
 docker compose up --build
 ```
 
-| Service | Port | Description |
-| --- | --- | --- |
-| `xfini-user-api` | `5677` | The REST API |
-| `n8n` | `5678` | n8n workflow automation (HTTPS) |
-| `ngrok` | `4040` | ngrok dashboard / tunnel for n8n |
+| Service          | Port   | Description                      |
+| ---------------- | ------ | -------------------------------- |
+| `xfini-user-api` | `5677` | The REST API                     |
+| `n8n`            | `5678` | n8n workflow automation (HTTPS)  |
+| `ngrok`          | `4040` | ngrok dashboard / tunnel for n8n |
 
 > Set `FIREBASE_CREDENTIALS` in `.env` for Docker — the service account is not mounted automatically in production builds.
 >
@@ -177,12 +177,12 @@ Creates a new Firebase Auth user, resolves the subscription plan and active cour
 }
 ```
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `firstName` | string | Auto-capitalised |
-| `lastName` | string | Auto-capitalised |
-| `email` | string | Must be a valid email |
-| `role` | string | `"student"` or `"admin"` |
+| Field        | Type   | Notes                                                                    |
+| ------------ | ------ | ------------------------------------------------------------------------ |
+| `firstName`  | string | Auto-capitalised                                                         |
+| `lastName`   | string | Auto-capitalised                                                         |
+| `email`      | string | Must be a valid email                                                    |
+| `role`       | string | `"student"` or `"admin"`                                                 |
 | `planmonths` | string | Matched against `name` field in `subscriptionPlans` Firestore collection |
 
 > Password is auto-generated as `{lowercaseFirstName}@123` (e.g. `jane@123`) and returned in the response.
@@ -207,12 +207,12 @@ Creates a new Firebase Auth user, resolves the subscription plan and active cour
 
 #### Error responses
 
-| Status | Code | Reason |
-| --- | --- | --- |
-| `400` | `INVALID_INPUT` | Missing fields, invalid role, short password, or bad `planmonths` |
-| `400` | `PLAN_NOT_FOUND` | No active plan matches the given `planmonths` name |
-| `400` | `AUTH_FAILED` | Email already in use or Firebase auth error |
-| `500` | `FIRESTORE_FAILED` | Firestore write failed (Auth user is cleaned up automatically) |
+| Status | Code               | Reason                                                            |
+| ------ | ------------------ | ----------------------------------------------------------------- |
+| `400`  | `INVALID_INPUT`    | Missing fields, invalid role, short password, or bad `planmonths` |
+| `400`  | `PLAN_NOT_FOUND`   | No active plan matches the given `planmonths` name                |
+| `400`  | `AUTH_FAILED`      | Email already in use or Firebase auth error                       |
+| `500`  | `FIRESTORE_FAILED` | Firestore write failed (Auth user is cleaned up automatically)    |
 
 ---
 
