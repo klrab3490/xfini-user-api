@@ -1,10 +1,10 @@
 require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
-const { DatabaseSync } = require('node:sqlite');
 const express = require('express');
+const { DatabaseSync } = require('node:sqlite');
 const rateLimit = require('express-rate-limit');
-const admin = require('firebase-admin');
+const { initializeApp, cert, getAuth, getFirestore, FieldValue, Timestamp } = require('./firebaseAdmin');
 
 const statsDbPath = process.env.STATS_DB_PATH || path.join(__dirname, 'data', 'stats.db');
 fs.mkdirSync(path.dirname(statsDbPath), { recursive: true });
@@ -18,7 +18,9 @@ statsDb.exec(`
     created_at TEXT NOT NULL
   )
 `);
-const recordStat = statsDb.prepare('INSERT INTO api_stats (path, success, status_code, created_at) VALUES (?, ?, ?, ?)');
+const recordStat = statsDb.prepare(
+  'INSERT INTO api_stats (path, success, status_code, created_at) VALUES (?, ?, ?, ?)',
+);
 const countStats = statsDb.prepare(`
   SELECT
     SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) AS created,
@@ -34,25 +36,27 @@ const serviceAccount = process.env.FIREBASE_CREDENTIALS
   ? JSON.parse(process.env.FIREBASE_CREDENTIALS)
   : require('./serviceAccount.json');
 
-admin.initializeApp({
-  credential: admin.cert(serviceAccount)
+initializeApp({
+  credential: cert(serviceAccount),
 });
-
+const db = getFirestore();
+const auth = getAuth();
 
 const app = express();
 app.use(express.json());
-app.use(rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 100,
-  standardHeaders: true,
-  legacyHeaders: false
-}));
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+  }),
+);
 
 app.use((req, res, next) => {
   const start = Date.now();
   const timestamp = new Date().toISOString();
   const body = req.body && Object.keys(req.body).length ? JSON.stringify(req.body) : null;
-  console.log(`[${timestamp}] ${req.method} ${req.path}${body ? ` — body: ${body}` : ''}`);
 
   res.on('finish', () => {
     const ms = Date.now() - start;
@@ -60,7 +64,9 @@ app.use((req, res, next) => {
     const color = status < 400 ? '\x1b[32m' : '\x1b[31m';
     const reset = '\x1b[0m';
     const label = status < 400 ? 'SUCCESS' : 'FAILED';
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} → ${color}${status} ${label}${reset} (${ms}ms)`);
+    console.log(
+      `[${timestamp}] ${req.method} ${req.path}${body ? ` — body: ${body}` : ''} → ${color}${status} ${label}${reset} (${ms}ms)`,
+    );
 
     if (req.path === '/create-student') {
       try {
@@ -86,8 +92,8 @@ app.post('/api/getToken', async (req, res) => {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD, returnSecureToken: true })
-      }
+        body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD, returnSecureToken: true }),
+      },
     );
 
     const data = await response.json();
@@ -100,14 +106,12 @@ app.post('/api/getToken', async (req, res) => {
     return res.status(200).json({
       success: true,
       idToken: data.idToken,
-      expiresIn: data.expiresIn  // seconds until token expires (3600 = 1 hour)
+      expiresIn: data.expiresIn, // seconds until token expires (3600 = 1 hour)
     });
-
   } catch (err) {
     return res.status(500).json({ success: false, error: `Failed to get token: ${err.message}` });
   }
 });
-
 
 // Linear-time email check (no backtracking-prone regex) — avoids ReDoS on attacker-controlled input.
 function isValidEmail(email) {
@@ -130,12 +134,12 @@ app.get('/stats', (req, res) => {
     const startOfWeek = new Date(startOfDay);
     startOfWeek.setDate(startOfWeek.getDate() - 6);
 
-    const zeroIfNull = row => ({ created: row.created || 0, failed: row.failed || 0 });
+    const zeroIfNull = (row) => ({ created: row.created || 0, failed: row.failed || 0 });
 
     res.json({
       success: true,
       today: zeroIfNull(countStats.get('/create-student', startOfDay.toISOString())),
-      last7Days: zeroIfNull(countStats.get('/create-student', startOfWeek.toISOString()))
+      last7Days: zeroIfNull(countStats.get('/create-student', startOfWeek.toISOString())),
     });
   } catch (err) {
     res.status(500).json({ success: false, error: `Failed to fetch stats: ${err.message}` });
@@ -149,7 +153,11 @@ app.post('/create-student', async (req, res) => {
 
   // Step 1 — Validate input
   if (!firstName || !lastName || !email || !planmonths || !role) {
-    return res.status(400).json({ success: false, error: 'All fields are required: firstName, lastName, email, planmonths, role.', code: 'INVALID_INPUT' });
+    return res.status(400).json({
+      success: false,
+      error: 'All fields are required: firstName, lastName, email, planmonths, role.',
+      code: 'INVALID_INPUT',
+    });
   }
   if (!isValidEmail(email)) {
     return res.status(400).json({ success: false, error: 'Invalid email address format.', code: 'INVALID_INPUT' });
@@ -164,13 +172,17 @@ app.post('/create-student', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Invalid planmonths value.', code: 'INVALID_INPUT' });
   }
 
-  const toProper = str => str.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  const toProper = (str) =>
+    str
+      .trim()
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
   const displayName = `${toProper(firstName)} ${toProper(lastName)}`;
 
   // Step 2 — Resolve subscription plan from Firestore
   let planId, planName, price;
   try {
-    const plansSnap = await admin.firestore()
+    const plansSnap = await db
       .collection('subscriptionPlans')
       .where('name', '==', planmonths)
       .where('isActive', '==', true)
@@ -178,81 +190,87 @@ app.post('/create-student', async (req, res) => {
       .get();
 
     if (plansSnap.empty) {
-      return res.status(400).json({ success: false, error: `No active plan found with name "${planmonths}".`, code: 'PLAN_NOT_FOUND' });
+      return res
+        .status(400)
+        .json({ success: false, error: `No active plan found with name "${planmonths}".`, code: 'PLAN_NOT_FOUND' });
     }
 
     const planDoc = plansSnap.docs[0];
     planId = planDoc.id;
     ({ name: planName, price } = planDoc.data());
   } catch (err) {
-    return res.status(500).json({ success: false, error: `Failed to fetch plan: ${err.message}`, code: 'FIRESTORE_FAILED' });
+    return res
+      .status(500)
+      .json({ success: false, error: `Failed to fetch plan: ${err.message}`, code: 'FIRESTORE_FAILED' });
   }
 
   // Step 3 — Get active course IDs
-  let assignedCourseIds = [];
+  let assignedCourseIds;
   try {
-    const coursesSnap = await admin.firestore()
-      .collection('courses')
-      .where('isActive', '==', true)
-      .get();
-    assignedCourseIds = coursesSnap.docs.filter(d => !d.data().isTest).map(d => d.id);
+    const coursesSnap = await db.collection('courses').where('isActive', '==', true).get();
+    assignedCourseIds = coursesSnap.docs.filter((d) => !d.data().isTest).map((d) => d.id);
   } catch (err) {
-    return res.status(500).json({ success: false, error: `Failed to fetch courses: ${err.message}`, code: 'FIRESTORE_FAILED' });
+    return res
+      .status(500)
+      .json({ success: false, error: `Failed to fetch courses: ${err.message}`, code: 'FIRESTORE_FAILED' });
   }
 
   // Steps 4–8 — Auth + Firestore writes (cleanup on failure)
   let uid;
   try {
     // Step 4 — Create Firebase Auth user
-    const userRecord = await admin.auth().createUser({ email, password, displayName });
+    const userRecord = await auth.createUser({ email, password, displayName });
     uid = userRecord.uid;
 
     // Step 5 — Write users/{uid}
-    await admin.firestore().collection('users').doc(uid).set({
-      email,
-      displayName,
-      role,
-      assignedModules: [],
-      assignedCourseIds: [],
-      deviceRestriction: {
-        enabled: true,
-        registeredDeviceId: null,
-        registeredAt: null
-      },
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
+    await db
+      .collection('users')
+      .doc(uid)
+      .set({
+        email,
+        displayName,
+        role,
+        assignedModules: [],
+        assignedCourseIds: [],
+        deviceRestriction: {
+          enabled: true,
+          registeredDeviceId: null,
+          registeredAt: null,
+        },
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
 
     // Step 6 — Write subscriptions
     const now = new Date();
     const endDate = new Date(now);
     endDate.setMonth(endDate.getMonth() + months);
 
-    const subscriptionRef = await admin.firestore().collection('subscriptions').add({
+    const subscriptionRef = await db.collection('subscriptions').add({
       userId: uid,
       planId,
       planName,
-      startDate: admin.firestore.Timestamp.fromDate(now),
-      endDate: admin.firestore.Timestamp.fromDate(endDate),
+      startDate: Timestamp.fromDate(now),
+      endDate: Timestamp.fromDate(endDate),
       status: 'active',
       price,
       notificationsSent: {
         studentPreExpiry: false,
-        adminPreExpiry: false
+        adminPreExpiry: false,
       },
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     // Step 7 — Update users/{uid} with course IDs
-    await admin.firestore().collection('users').doc(uid).update({
+    await db.collection('users').doc(uid).update({
       assignedCourseIds,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     // Step 8 — Set custom claims (non-fatal)
     try {
-      await admin.auth().setCustomUserClaims(uid, { role, assignedCourseIds });
+      await auth.setCustomUserClaims(uid, { role, assignedCourseIds });
     } catch (e) {
       console.warn('Custom claims failed (non-fatal):', e.message);
     }
@@ -268,18 +286,21 @@ app.post('/create-student', async (req, res) => {
       planId,
       subscriptionId: subscriptionRef.id,
       assignedCourses: assignedCourseIds.length,
-      endDate: endDate.toISOString()
+      endDate: endDate.toISOString(),
     });
-
   } catch (error) {
     if (uid) {
-      try { await admin.auth().deleteUser(uid); } catch (_) {}
+      try {
+        await auth.deleteUser(uid);
+      } catch (cleanupErr) {
+        console.warn('Failed to delete orphaned auth user:', cleanupErr.message);
+      }
     }
     console.error(error);
     return res.status(400).json({
       success: false,
       code: error.code || 'AUTH_FAILED',
-      error: error.message || 'Unknown error'
+      error: error.message || 'Unknown error',
     });
   }
 });

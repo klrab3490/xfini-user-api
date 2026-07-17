@@ -27,10 +27,7 @@
       },
       "type": "n8n-nodes-base.googleSheetsTrigger",
       "typeVersion": 1,
-      "position": [
-        0,
-        64
-      ],
+      "position": [0, 64],
       "id": "b46fa732-d43e-44c6-bb67-0400c5519ff0",
       "name": "Google Sheets Trigger",
       "credentials": {
@@ -66,10 +63,7 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        224,
-        64
-      ],
+      "position": [224, 64],
       "id": "1b1d81a6-d508-4e10-b127-0d0cd844bc42",
       "name": "If"
     },
@@ -113,10 +107,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [
-        448,
-        64
-      ],
+      "position": [448, 64],
       "id": "ee15cb55-b23f-47e9-b24a-8a2b32f7a5bd",
       "name": "HTTP Request"
     },
@@ -146,10 +137,7 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        672,
-        64
-      ],
+      "position": [672, 64],
       "id": "f2e254ab-71d1-4389-b59e-b99866a7318c",
       "name": "If1"
     },
@@ -160,10 +148,7 @@
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [
-        896,
-        64
-      ],
+      "position": [896, 64],
       "id": "78f97021-6758-45cb-9207-f0693d79cff8",
       "name": "Edit Fields"
     },
@@ -189,9 +174,7 @@
             "First Name": "={{ $('If').item.json['First Name'] }}",
             "Status": "={{ $json.success ? \"Done\" : \"Failed\" }}"
           },
-          "matchingColumns": [
-            "First Name"
-          ],
+          "matchingColumns": ["First Name"],
           "schema": [
             {
               "id": "Timestamp",
@@ -379,10 +362,7 @@
       },
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
-      "position": [
-        1120,
-        64
-      ],
+      "position": [1120, 64],
       "id": "7f8c9329-d0b1-4985-aa4c-58e7faf86060",
       "name": "Append or update row in sheet",
       "credentials": {
@@ -402,10 +382,7 @@
       },
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
-      "position": [
-        1328,
-        64
-      ],
+      "position": [1328, 64],
       "id": "3bb13830-782b-4ba3-adac-90fcb0a66159",
       "name": "Send an Email",
       "webhookId": "b692e9de-7029-4e93-8dff-0a3a58a6944e",

@@ -1,14 +1,14 @@
 process.env.FIREBASE_CREDENTIALS = JSON.stringify({
   project_id: 'test-project',
   client_email: 'test@test-project.iam.gserviceaccount.com',
-  private_key: '-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n'
+  private_key: '-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----\n',
 });
 // Set (not delete) so dotenv.config() in index.js — which only fills in unset
 // keys — can't pull real admin credentials from a local .env file.
 process.env.ADMIN_EMAIL = '';
 process.env.ADMIN_PASSWORD = '';
-process.env.FIREBASE_API_KEY = 'test-api-key';
 process.env.STATS_DB_PATH = ':memory:';
+process.env.FIREBASE_API_KEY = 'test-api-key';
 
 const { test, mock, before, after } = require('node:test');
 const assert = require('node:assert/strict');
@@ -18,7 +18,7 @@ function makeQuery(docs) {
   const query = {
     where: () => query,
     limit: () => query,
-    get: async () => snap
+    get: async () => snap,
   };
   return query;
 }
@@ -32,45 +32,45 @@ const firestoreState = {
   plans: [],
   courses: [],
   users: new Map(),
-  subscriptions: []
+  subscriptions: [],
 };
 
 function resetFirestoreState() {
   firestoreState.plans = [makeDoc('plan-6mo', { name: '6', price: 100, isActive: true })];
   firestoreState.courses = [
     makeDoc('course-1', { isActive: true }),
-    makeDoc('course-2', { isActive: true, isTest: true })
+    makeDoc('course-2', { isActive: true, isTest: true }),
   ];
   firestoreState.users = new Map();
   firestoreState.subscriptions = [];
 }
 
 const firestoreFake = () => ({
-  collection: name => {
+  collection: (name) => {
     if (name === 'subscriptionPlans') return makeQuery(firestoreState.plans);
     if (name === 'courses') return makeQuery(firestoreState.courses);
     if (name === 'users') {
       return {
-        doc: id => ({
-          set: async data => firestoreState.users.set(id, data),
-          update: async data => firestoreState.users.set(id, { ...firestoreState.users.get(id), ...data })
-        })
+        doc: (id) => ({
+          set: async (data) => firestoreState.users.set(id, data),
+          update: async (data) => firestoreState.users.set(id, { ...firestoreState.users.get(id), ...data }),
+        }),
       };
     }
     if (name === 'subscriptions') {
       return {
-        add: async data => {
+        add: async (data) => {
           const id = `sub-${firestoreState.subscriptions.length + 1}`;
           firestoreState.subscriptions.push({ id, ...data });
           return { id };
-        }
+        },
       };
     }
     throw new Error(`Unexpected collection: ${name}`);
-  }
+  },
 });
 firestoreFake.FieldValue = { serverTimestamp: () => ({ toDate: () => new Date() }) };
-firestoreFake.Timestamp = { fromDate: date => ({ toDate: () => date }) };
+firestoreFake.Timestamp = { fromDate: (date) => ({ toDate: () => date }) };
 
 let createdUsers = [];
 const authFake = () => ({
@@ -80,18 +80,18 @@ const authFake = () => ({
     return { uid };
   },
   setCustomUserClaims: async () => {},
-  deleteUser: async () => {}
+  deleteUser: async () => {},
 });
 
-mock.module('firebase-admin', {
+mock.module('../firebaseAdmin.js', {
   exports: {
-    default: {
-      initializeApp: () => {},
-      cert: () => ({}),
-      firestore: firestoreFake,
-      auth: authFake
-    }
-  }
+    initializeApp: () => {},
+    cert: () => ({}),
+    getFirestore: firestoreFake,
+    getAuth: authFake,
+    FieldValue: firestoreFake.FieldValue,
+    Timestamp: firestoreFake.Timestamp,
+  },
 });
 
 const app = require('../index.js');
@@ -99,7 +99,7 @@ const app = require('../index.js');
 let server, baseUrl;
 
 before(async () => {
-  await new Promise(resolve => {
+  await new Promise((resolve) => {
     server = app.listen(0, () => {
       baseUrl = `http://localhost:${server.address().port}`;
       resolve();
@@ -119,7 +119,7 @@ test('POST /create-student rejects missing fields', async () => {
   const res = await fetch(`${baseUrl}/create-student`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ firstName: 'Jane' })
+    body: JSON.stringify({ firstName: 'Jane' }),
   });
   const body = await res.json();
   assert.equal(res.status, 400);
@@ -130,7 +130,13 @@ test('POST /create-student rejects invalid email', async () => {
   const res = await fetch(`${baseUrl}/create-student`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ firstName: 'Jane', lastName: 'Doe', email: 'not-an-email', planmonths: '6', role: 'student' })
+    body: JSON.stringify({
+      firstName: 'Jane',
+      lastName: 'Doe',
+      email: 'not-an-email',
+      planmonths: '6',
+      role: 'student',
+    }),
   });
   const body = await res.json();
   assert.equal(res.status, 400);
@@ -141,7 +147,7 @@ test('POST /create-student rejects emails without a domain dot', async () => {
   const res = await fetch(`${baseUrl}/create-student`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ firstName: 'Jane', lastName: 'Doe', email: 'jane@doe', planmonths: '6', role: 'student' })
+    body: JSON.stringify({ firstName: 'Jane', lastName: 'Doe', email: 'jane@doe', planmonths: '6', role: 'student' }),
   });
   const body = await res.json();
   assert.equal(res.status, 400);
@@ -152,7 +158,13 @@ test('POST /create-student rejects multiple @ signs', async () => {
   const res = await fetch(`${baseUrl}/create-student`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ firstName: 'Jane', lastName: 'Doe', email: 'jane@@doe.com', planmonths: '6', role: 'student' })
+    body: JSON.stringify({
+      firstName: 'Jane',
+      lastName: 'Doe',
+      email: 'jane@@doe.com',
+      planmonths: '6',
+      role: 'student',
+    }),
   });
   const body = await res.json();
   assert.equal(res.status, 400);
@@ -163,7 +175,13 @@ test('POST /create-student rejects invalid role', async () => {
   const res = await fetch(`${baseUrl}/create-student`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ firstName: 'Jane', lastName: 'Doe', email: 'jane@doe.com', planmonths: '6', role: 'superadmin' })
+    body: JSON.stringify({
+      firstName: 'Jane',
+      lastName: 'Doe',
+      email: 'jane@doe.com',
+      planmonths: '6',
+      role: 'superadmin',
+    }),
   });
   assert.equal(res.status, 400);
 });
@@ -172,7 +190,13 @@ test('POST /create-student returns PLAN_NOT_FOUND for unknown plan', async () =>
   const res = await fetch(`${baseUrl}/create-student`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ firstName: 'Jane', lastName: 'Doe', email: 'jane@doe.com', planmonths: '99', role: 'student' })
+    body: JSON.stringify({
+      firstName: 'Jane',
+      lastName: 'Doe',
+      email: 'jane@doe.com',
+      planmonths: '99',
+      role: 'student',
+    }),
   });
   const body = await res.json();
   assert.equal(res.status, 400);
@@ -186,7 +210,13 @@ test('POST /create-student creates a student end-to-end', async () => {
   const res = await fetch(`${baseUrl}/create-student`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ firstName: 'jane', lastName: 'doe', email: 'jane@doe.com', planmonths: '6', role: 'student' })
+    body: JSON.stringify({
+      firstName: 'jane',
+      lastName: 'doe',
+      email: 'jane@doe.com',
+      planmonths: '6',
+      role: 'student',
+    }),
   });
   const body = await res.json();
 

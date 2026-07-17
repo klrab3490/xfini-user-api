@@ -31,16 +31,16 @@ docker compose up --build
 
 Required `.env` vars for compose:
 
-| Variable | Purpose |
-| --- | --- |
-| `ADMIN_EMAIL` | Firebase admin account email |
-| `ADMIN_PASSWORD` | Firebase admin account password |
-| `PORT` | API port (default: 3001) |
-| `FIREBASE_CREDENTIALS` | Full `serviceAccount.json` contents as a single-line JSON string |
-| `FIREBASE_API_KEY` | Firebase Web API key, required by `/api/getToken` |
-| `STATS_DB_PATH` | SQLite file backing `/stats` (default: `./data/stats.db`); persisted via a named volume in Docker |
-| `NGROK_AUTHTOKEN` | ngrok auth token |
-| `NGROK_DOMAIN` | Static ngrok domain (e.g. `foo.ngrok-free.app`) |
+| Variable               | Purpose                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------- |
+| `ADMIN_EMAIL`          | Firebase admin account email                                                                      |
+| `ADMIN_PASSWORD`       | Firebase admin account password                                                                   |
+| `PORT`                 | API port (default: 3001)                                                                          |
+| `FIREBASE_CREDENTIALS` | Full `serviceAccount.json` contents as a single-line JSON string                                  |
+| `FIREBASE_API_KEY`     | Firebase Web API key, required by `/api/getToken`                                                 |
+| `STATS_DB_PATH`        | SQLite file backing `/stats` (default: `./data/stats.db`); persisted via a named volume in Docker |
+| `NGROK_AUTHTOKEN`      | ngrok auth token                                                                                  |
+| `NGROK_DOMAIN`         | Static ngrok domain (e.g. `foo.ngrok-free.app`)                                                   |
 
 The `xfini-user-api` service also mounts `./serviceAccount.json` as a fallback volume — only needed for local compose runs without `FIREBASE_CREDENTIALS`.
 
@@ -55,12 +55,12 @@ The `xfini-user-api` service also mounts `./serviceAccount.json` as a fallback v
 
 ## Endpoints
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| GET | `/health` | Health check |
-| GET | `/stats` | Today's and last-7-days' created/failed counts for `/create-student` |
-| POST | `/api/getToken` | Sign in with admin credentials and return a Firebase ID token |
-| POST | `/create-student` | Create a Firebase Auth user + Firestore profile + subscription |
+| Method | Path              | Purpose                                                              |
+| ------ | ----------------- | -------------------------------------------------------------------- |
+| GET    | `/health`         | Health check                                                         |
+| GET    | `/stats`          | Today's and last-7-days' created/failed counts for `/create-student` |
+| POST   | `/api/getToken`   | Sign in with admin credentials and return a Firebase ID token        |
+| POST   | `/create-student` | Create a Firebase Auth user + Firestore profile + subscription       |
 
 ### `GET /stats`
 
@@ -72,14 +72,14 @@ Signs in using `ADMIN_EMAIL` / `ADMIN_PASSWORD` from env via the Firebase REST A
 
 ### `POST /create-student` — required body fields
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `firstName` | string | Auto-capitalised |
-| `lastName` | string | Auto-capitalised |
-| `email` | string | |
-| `password` | — | Auto-generated as `{lowercaseFirstName}@123`; not accepted from caller |
-| `role` | string | `"student"` or `"admin"` |
-| `planmonths` | string | Matched against `name` field in `subscriptionPlans` collection |
+| Field        | Type   | Notes                                                                  |
+| ------------ | ------ | ---------------------------------------------------------------------- |
+| `firstName`  | string | Auto-capitalised                                                       |
+| `lastName`   | string | Auto-capitalised                                                       |
+| `email`      | string |                                                                        |
+| `password`   | —      | Auto-generated as `{lowercaseFirstName}@123`; not accepted from caller |
+| `role`       | string | `"student"` or `"admin"`                                               |
+| `planmonths` | string | Matched against `name` field in `subscriptionPlans` collection         |
 
 ### `POST /create-student` — Firestore write order
 

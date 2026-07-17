@@ -11,6 +11,7 @@
 To report a vulnerability in `xfini-user-api`, please email **abrahul02@gmail.com** with the subject line `[SECURITY] xfini-user-api`.
 
 Include:
+
 - A description of the vulnerability and its potential impact
 - Steps to reproduce or proof-of-concept
 - Affected version(s)
