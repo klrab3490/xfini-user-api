@@ -5,8 +5,14 @@ title: '[Feature] '
 labels: enhancement
 ---
 
-**What problem does this solve?**
+## What problem does this solve?
 
-**Proposed solution**
+A clear description of the gap or pain point.
 
-**Alternatives considered**
+## Proposed solution
+
+What you'd like to happen.
+
+## Alternatives considered
+
+Other approaches you thought about, if any.

@@ -5,16 +5,19 @@ title: '[Bug] '
 labels: bug
 ---
 
-**Describe the bug**
+## Describe the bug
+
 A clear description of what's wrong.
 
-**To Reproduce**
+## To Reproduce
+
 Request made (endpoint, method, body) and the response received.
 
-**Expected behavior**
+## Expected behavior
+
 What you expected to happen instead.
 
-**Environment**
+## Environment
 
 - Deployment: (local / Docker Compose / other)
 - Node version:
