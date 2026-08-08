@@ -28,11 +28,13 @@ services:
 
   ngrok:
     image: ngrok/ngrok:latest
-    command: http --url=${NGROK_DOMAIN} --request-header-add "ngrok-skip-browser-warning:true" https://n8n:443
+    command: http --url=${NGROK_DOMAIN} --traffic-policy-file=/etc/ngrok/policy.yml http://n8n:5678
     ports:
       - '4040:4040'
     environment:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    volumes:
+      - ./ngrok-policy.yml:/etc/ngrok/policy.yml:ro
     depends_on:
       n8n:
         condition: service_healthy
@@ -41,10 +43,10 @@ services:
   n8n:
     image: n8nio/n8n:latest
     ports:
-      - '5678:443'
+      - '5678:5678'
     environment:
       N8N_HOST: ${NGROK_DOMAIN}
-      N8N_PORT: 443
+      N8N_PORT: 5678
       N8N_PROTOCOL: https
       N8N_WEBHOOK_URL: https://${NGROK_DOMAIN}
       N8N_PROXY_HOPS: 1
@@ -58,7 +60,7 @@ services:
     depends_on:
       - xfini-user-api
     healthcheck:
-      test: ['CMD-SHELL', 'nc -z localhost 443 || exit 1']
+      test: ['CMD-SHELL', 'nc -z localhost 5678 || exit 1']
       interval: 5s
       timeout: 5s
       retries: 10
