@@ -28,14 +28,11 @@ services:
 
   ngrok:
     image: ngrok/ngrok:latest
-    command: http --url=${NGROK_DOMAIN} --traffic-policy-file=/etc/ngrok/policy.yml http://n8n:5678
+    command: http --url=${NGROK_DOMAIN} http://n8n:5678
     ports:
       - '4040:4040'
     environment:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
-    configs:
-      - source: ngrok_policy
-        target: /etc/ngrok/policy.yml
     depends_on:
       n8n:
         condition: service_healthy
@@ -71,7 +68,3 @@ services:
 volumes:
   n8n_data:
   xfini_stats_data:
-
-configs:
-  ngrok_policy:
-    file: ./ngrok-policy.yml
