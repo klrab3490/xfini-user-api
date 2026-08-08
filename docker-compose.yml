@@ -41,7 +41,7 @@ services:
 
   ngrok:
     image: ngrok/ngrok:latest
-    command: http --url=${NGROK_DOMAIN} --request-header-add "ngrok-skip-browser-warning:true" http://n8n:443
+    command: http --url=${NGROK_DOMAIN} --request-header-add "ngrok-skip-browser-warning:true" https://n8n:443
     ports:
       - '4040:4040'
     environment:
@@ -60,8 +60,12 @@ services:
       N8N_PORT: 443
       N8N_PROTOCOL: https
       N8N_WEBHOOK_URL: https://${NGROK_DOMAIN}
+      N8N_PROXY_HOPS: 1
       GENERIC_TIMEZONE: Asia/Kolkata
       TZ: Asia/Kolkata
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
