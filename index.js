@@ -214,6 +214,9 @@ app.post('/create-student', async (req, res) => {
         return !course.isTest && typeof course.title === 'string' && course.title.includes('[AT]');
       })
       .map((d) => d.id);
+    console.log(
+      `[${new Date().toISOString()}] Courses for ${displayName} (${email}): ${coursesSnap.size} active, ${assignedCourseIds.length} matched "[AT]" and assigned`,
+    );
   } catch (err) {
     return res
       .status(500)
