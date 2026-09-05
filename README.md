@@ -11,7 +11,7 @@ Standalone REST API for Xfini student creation, called from n8n. Backed by Fireb
 ## Setup
 
 ```bash
-npm install
+pnpm install
 ```
 
 Place your Firebase service account key at the project root:
@@ -30,10 +30,10 @@ cp .env.example .env
 
 ```bash
 # development (auto-restart)
-npm run dev
+pnpm run dev
 
 # production
-npm start
+pnpm start
 ```
 
 Server starts on `http://localhost:3001` by default.

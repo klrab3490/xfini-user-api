@@ -1,0 +1,7 @@
+allowBuilds:
+  '@firebase/util': true
+  protobufjs: true
+minimumReleaseAgeExclude:
+  - eslint@10.10.0
+overrides:
+  uuid: ^14.0.2
