@@ -5,15 +5,15 @@ Thanks for considering a contribution to xfini-user-api.
 ## Getting started
 
 ```bash
-npm install
+pnpm install
 cp .env.example .env   # fill in your Firebase values
-npm run dev
+pnpm run dev
 ```
 
 ## Before opening a PR
 
-- Run `npm test` — the suite mocks `firebase-admin`, no real Firebase project needed.
-- Run `npm run lint` and `npm run format`.
+- Run `pnpm test` — the suite mocks `firebase-admin`, no real Firebase project needed.
+- Run `pnpm run lint` and `pnpm run format`.
 - Keep changes scoped; unrelated refactors belong in a separate PR.
 
 ## Reporting bugs / requesting features
