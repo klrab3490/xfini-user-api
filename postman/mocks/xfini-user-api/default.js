@@ -4,6 +4,7 @@
  */
 require('dotenv').config();
 const http = require('http');
+const { randomInt } = require('crypto');
 const { URL } = require('url');
 
 const PORT = process.env.MOCK_PORT || 4010;
@@ -77,7 +78,7 @@ const server = http.createServer((req, res) => {
         return sendJson(200, {
           success: true,
           student: {
-            uid: 'mock_uid_' + Math.floor(Math.random() * 100000),
+            uid: 'mock_uid_' + randomInt(100000),
             name: `${payload.firstName} ${payload.lastName}`,
             email: payload.email,
             role: payload.role || 'student',
