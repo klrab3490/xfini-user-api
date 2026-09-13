@@ -687,3 +687,33 @@ test('GET /expiring-students validates authorization header if provided', async 
   assert.equal(resValid.status, 200);
   assert.equal(bodyValid.success, true);
 });
+
+test('POST /create-student with axios: true returns 200 OK with error body on failure', async () => {
+  const res = await fetch(`${baseUrl}/create-student`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      axios: 'true',
+    },
+    body: JSON.stringify({ firstName: 'Jane' }),
+  });
+  const body = await res.json();
+  assert.equal(res.status, 200);
+  assert.equal(body.success, false);
+  assert.equal(body.code, 'INVALID_INPUT');
+});
+
+test('POST /create-student with x-axios: true returns 200 OK with error body on failure', async () => {
+  const res = await fetch(`${baseUrl}/create-student`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-axios': 'true',
+    },
+    body: JSON.stringify({ firstName: 'Jane' }),
+  });
+  const body = await res.json();
+  assert.equal(res.status, 200);
+  assert.equal(body.success, false);
+  assert.equal(body.code, 'INVALID_INPUT');
+});

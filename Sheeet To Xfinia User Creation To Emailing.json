@@ -1,5 +1,5 @@
 {
-  "name": "My workflow 2",
+  "name": "Google Sheet Auto Account Creation",
   "nodes": [
     {
       "parameters": {
@@ -12,30 +12,83 @@
         },
         "documentId": {
           "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/1TIpdT1nD8OJRd07HAw5z-jsdXnfKPOjDUDCNpt_Z6v4/edit?gid=1767212848#gid=1767212848",
-          "mode": "url"
+          "value": "14ZmBBUGbytPeI-hqIaffZ71eUvj9Bdzzf8bkNfBKbZQ",
+          "mode": "list",
+          "cachedResultName": "   Briffini Academy New Admission (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14ZmBBUGbytPeI-hqIaffZ71eUvj9Bdzzf8bkNfBKbZQ/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
           "value": 1767212848,
           "mode": "list",
           "cachedResultName": "Form responses 1",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TIpdT1nD8OJRd07HAw5z-jsdXnfKPOjDUDCNpt_Z6v4/edit#gid=1767212848"
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14ZmBBUGbytPeI-hqIaffZ71eUvj9Bdzzf8bkNfBKbZQ/edit#gid=1767212848"
         },
         "event": "rowAdded",
         "options": {}
       },
       "type": "n8n-nodes-base.googleSheetsTrigger",
       "typeVersion": 1,
-      "position": [0, 64],
-      "id": "b46fa732-d43e-44c6-bb67-0400c5519ff0",
+      "position": [-1568, 400],
+      "id": "ed2c38e6-2e5a-42d5-beae-c75ec887c932",
       "name": "Google Sheets Trigger",
+      "notesInFlow": false,
+      "retryOnFail": true,
       "credentials": {
         "googleSheetsTriggerOAuth2Api": {
-          "id": "hK7yVDwNFS4x8WkU",
+          "id": "qP6DfyWgCmtqfEOQ",
           "name": "Google Sheets Trigger account"
         }
-      }
+      },
+      "notes": "Data Fetch Failed"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://xfini-user-api:3001/create-student",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "axios",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "firstName",
+              "value": "={{ $json.item.json['First Name'] }}"
+            },
+            {
+              "name": "lastName",
+              "value": "={{ $json.item.json['Last Name'] }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.item.json['Email(This will be your username for the mobile app.)'] }}"
+            },
+            {
+              "name": "role",
+              "value": "student"
+            },
+            {
+              "name": "planmonths",
+              "value": "={{ $json.planmonths }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [-672, 256],
+      "id": "db6a7163-bfbf-4515-b6db-643e806c908f",
+      "name": "HTTP Request",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -55,61 +108,27 @@
                 "type": "string",
                 "operation": "equals"
               }
+            },
+            {
+              "id": "eca3d942-bb51-4927-9167-ada2b6c41ebe",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Failed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
             }
           ],
-          "combinator": "and"
+          "combinator": "or"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [224, 64],
-      "id": "1b1d81a6-d508-4e10-b127-0d0cd844bc42",
-      "name": "If"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://192.168.31.242:3001/api/createUser",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "email",
-              "value": "={{ $json['Email(This will be your username for the mobile app.)'] }}"
-            },
-            {
-              "name": "password",
-              "value": "Pass1234"
-            },
-            {
-              "name": "firstName",
-              "value": "={{ $json['First Name'] }}"
-            },
-            {
-              "name": "lastName",
-              "value": "={{ $json['Last Name'] }}"
-            },
-            {
-              "name": "role",
-              "value": "student"
-            }
-          ]
-        },
-        "options": {
-          "batching": {
-            "batch": {
-              "batchSize": 1,
-              "batchInterval": 10000
-            }
-          }
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [448, 64],
-      "id": "ee15cb55-b23f-47e9-b24a-8a2b32f7a5bd",
-      "name": "HTTP Request"
+      "position": [-1344, 400],
+      "id": "52aeda98-5333-4713-bf69-b932375eed17",
+      "name": "Check if User Is Already Created Or Not"
     },
     {
       "parameters": {
@@ -137,44 +156,38 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [672, 64],
-      "id": "f2e254ab-71d1-4389-b59e-b99866a7318c",
-      "name": "If1"
+      "position": [-448, 256],
+      "id": "f14c02d6-fb4e-4ec9-b91a-e01172cd6971",
+      "name": "Check if POST Failed Or Not"
     },
     {
       "parameters": {
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [896, 64],
-      "id": "78f97021-6758-45cb-9207-f0693d79cff8",
-      "name": "Edit Fields"
-    },
-    {
-      "parameters": {
-        "operation": "appendOrUpdate",
+        "operation": "update",
         "documentId": {
           "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/1TIpdT1nD8OJRd07HAw5z-jsdXnfKPOjDUDCNpt_Z6v4/edit?gid=1767212848#gid=1767212848",
-          "mode": "url"
+          "value": "14ZmBBUGbytPeI-hqIaffZ71eUvj9Bdzzf8bkNfBKbZQ",
+          "mode": "list",
+          "cachedResultName": "   Briffini Academy New Admission (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14ZmBBUGbytPeI-hqIaffZ71eUvj9Bdzzf8bkNfBKbZQ/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
           "value": 1767212848,
           "mode": "list",
           "cachedResultName": "Form responses 1",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TIpdT1nD8OJRd07HAw5z-jsdXnfKPOjDUDCNpt_Z6v4/edit#gid=1767212848"
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14ZmBBUGbytPeI-hqIaffZ71eUvj9Bdzzf8bkNfBKbZQ/edit#gid=1767212848"
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Email(This will be your username for the mobile app.)": "={{ $json.user.email }}",
-            "First Name": "={{ $('If').item.json['First Name'] }}",
-            "Status": "={{ $json.success ? \"Done\" : \"Failed\" }}"
+            "First Name": "={{ $('Google Sheets Trigger').item.json['First Name'] }}",
+            "Timestamp": "={{ $('Google Sheets Trigger').item.json.Timestamp }}",
+            "Last Name": "={{ $('Google Sheets Trigger').item.json['Last Name'] }}",
+            "Status": "Failed",
+            "Email(This will be your username for the mobile app.)": "={{ $('Google Sheets Trigger').item.json['Email(This will be your username for the mobile app.)'] }}",
+            "row_number": 0
           },
-          "matchingColumns": ["First Name"],
+          "matchingColumns": ["Email(This will be your username for the mobile app.)"],
           "schema": [
             {
               "id": "Timestamp",
@@ -183,7 +196,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "First Name",
@@ -202,7 +216,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Email(This will be your username for the mobile app.)",
@@ -215,13 +230,14 @@
               "removed": false
             },
             {
-              "id": "Phone Number(with country code )",
-              "displayName": "Phone Number(with country code )",
+              "id": "Phone Number(with country code)",
+              "displayName": "Phone Number(with country code)",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Your Join Date in Briffini Academy",
@@ -230,7 +246,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Your Practical Exam Date",
@@ -239,7 +256,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Your Subscription period",
@@ -248,7 +266,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Which device are you using?",
@@ -257,7 +276,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Your Agency Name",
@@ -266,7 +286,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Your Prospect Employer Name (if not, Give None)",
@@ -275,16 +296,18 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
-              "id": "                      Terms And Conditions\nWelcome to Xfini Academy for Nurses. By accessing this platform and engaging with any of its educational content, you acknowledge and agree to the following legally binding terms. All material provided within this platform—including but not limited to videos, audio recordings, presentation slides, written documents, illustrations, and any supporting digital or printed media—is the exclusive intellectual property of Xfini Academy for Nurses and its contributors. These materials are protected under national and international copyright legislation, including the Copyright and Related Rights Act, 2000 of Ireland and The Copyright Act, 1957 (as amended) of India.\n\nThis educational content is provided strictly for personal learning and professional development. Any attempt to download, copy, reproduce, screen-record, distribute, transmit, alter, adapt, translate, publicly display, or upload any part of the content to third-party platforms or social networks constitutes an infringement of copyright law. Sharing materials in any form, including via email, messaging services, cloud storage, or learning forums, without explicit, prior written consent from Xfini Academy for Nurses is strictly prohibited.\n\nSuch unauthorised actions are considered serious offences and may result in immediate revocation of access to all resources and services offered by Xfini Academy for Nurses. Furthermore, violators may face civil and criminal liability. Under Section 140 to 146 of the Irish Copyright and Related Rights Act, 2000, and Sections 63 to 70 of the Indian Copyright Act, 1957, copyright infringement may lead to legal proceedings, substantial financial penalties, and, in certain cases, imprisonment.\n\nAccess to the online classes and the application will be available only until your exam date. After that, all access will be cancelled immediately, regardless of whether you have taken a 16-day, 1-month, or 2-month course.Refunds will be processed only upon submission of valid supporting documents, and the refundable amount will be calculated after deducting the fees for the classes already attended and any applicable administrative charges.\n\nBy proceeding to access and use this platform, you confirm your understanding of and commitment to upholding these copyright conditions. You agree to respect the creative and intellectual efforts that underpin the development of these educational resources. If you are uncertain about any aspect of acceptable usage or if you wish to obtain permission for specific purposes, we urge you to contact  Xfini Academy for Nurses directly.\n\nWe thank you for your cooperation in safeguarding the integrity of our educational assets and for contributing to a culture of respect, responsibility, and legal compliance.",
-              "displayName": "                      Terms And Conditions\nWelcome to Xfini Academy for Nurses. By accessing this platform and engaging with any of its educational content, you acknowledge and agree to the following legally binding terms. All material provided within this platform—including but not limited to videos, audio recordings, presentation slides, written documents, illustrations, and any supporting digital or printed media—is the exclusive intellectual property of Xfini Academy for Nurses and its contributors. These materials are protected under national and international copyright legislation, including the Copyright and Related Rights Act, 2000 of Ireland and The Copyright Act, 1957 (as amended) of India.\n\nThis educational content is provided strictly for personal learning and professional development. Any attempt to download, copy, reproduce, screen-record, distribute, transmit, alter, adapt, translate, publicly display, or upload any part of the content to third-party platforms or social networks constitutes an infringement of copyright law. Sharing materials in any form, including via email, messaging services, cloud storage, or learning forums, without explicit, prior written consent from Xfini Academy for Nurses is strictly prohibited.\n\nSuch unauthorised actions are considered serious offences and may result in immediate revocation of access to all resources and services offered by Xfini Academy for Nurses. Furthermore, violators may face civil and criminal liability. Under Section 140 to 146 of the Irish Copyright and Related Rights Act, 2000, and Sections 63 to 70 of the Indian Copyright Act, 1957, copyright infringement may lead to legal proceedings, substantial financial penalties, and, in certain cases, imprisonment.\n\nAccess to the online classes and the application will be available only until your exam date. After that, all access will be cancelled immediately, regardless of whether you have taken a 16-day, 1-month, or 2-month course.Refunds will be processed only upon submission of valid supporting documents, and the refundable amount will be calculated after deducting the fees for the classes already attended and any applicable administrative charges.\n\nBy proceeding to access and use this platform, you confirm your understanding of and commitment to upholding these copyright conditions. You agree to respect the creative and intellectual efforts that underpin the development of these educational resources. If you are uncertain about any aspect of acceptable usage or if you wish to obtain permission for specific purposes, we urge you to contact  Xfini Academy for Nurses directly.\n\nWe thank you for your cooperation in safeguarding the integrity of our educational assets and for contributing to a culture of respect, responsibility, and legal compliance.",
+              "id": "                      Terms And Conditions\nWelcome to Xfini Academy for Nurses. By accessing this platform and engaging with any of its educational content, you acknowledge and agree to the following legally binding terms. All material provided within this platform—including but not limited to videos, audio recordings, presentation slides, written documents, illustrations, and any supporting digital or printed media—is the exclusive intellectual property of Xfini Academy for Nurses and its contributors. These materials are protected under national and international copyright legislation, including the Copyright and Related Rights Act, 2000 of Ireland and The Copyright Act, 1957 (as amended) of India.\n\nThis educational content is provided strictly for personal learning and professional development. Any attempt to download, copy, reproduce, screen-record, distribute, transmit, alter, adapt, translate, publicly display, or upload any part of the content to third-party platforms or social networks constitutes an infringement of copyright law. Sharing materials in any form, including via email, messaging services, cloud storage, or learning forums, without explicit, prior written consent from Xfini Academy for Nurses is strictly prohibited.\n\nSuch unauthorised actions are considered serious offences and may result in immediate revocation of access to all resources and services offered by Xfini Academy for Nurses. Furthermore, violators may face civil and criminal liability. Under Section 140 to 146 of the Irish Copyright and Related Rights Act, 2000, and Sections 63 to 70 of the Indian Copyright Act, 1957, copyright infringement may lead to legal proceedings, substantial financial penalties, and, in certain cases, imprisonment.\n\nAccess to the online classes and the application will be available only until your exam date. After that, all access will be cancelled immediately, regardless of whether you have taken a 16-day, 1-month, or 2-month course.Refunds will be processed only upon submission of valid supporting documents, and the refundable amount will be calculated after deducting the fees for the classes already attended and any applicable administrative charges.\n\nBy proceeding to access and use this platform, you confirm your understanding of and commitment to upholding these copyright conditions. You agree to respect the creative and intellectual efforts that underpin the development of these educational resources. If you are uncertain about any aspect of acceptable usage or if you wish to obtain permission for specific purposes, we urge you to contact  Xfini Academy for Nurses directly.\n\nCourse Continuity Policy\nOnce a student is enrolled in the course offered by Xfini Academy for Nurses, the course must be attended continuously without interruption. Freezing, pausing, postponing the course during the enrolled period is strictly not permitted under any circumstances, unless it is a medical emergency.\nStudents are expected to attend and complete the course within the allocated duration provided at the time of enrollment. Failure to continue the course regularly will not entitle the student to an extension, rescheduling, or additional access period. By enrolling in the programme, the student acknowledges and agrees to comply with this continuous learning policy.\n\nWe thank you for your cooperation in safeguarding the integrity of our educational assets and for contributing to a culture of respect, responsibility, and legal compliance.",
+              "displayName": "                      Terms And Conditions\nWelcome to Xfini Academy for Nurses. By accessing this platform and engaging with any of its educational content, you acknowledge and agree to the following legally binding terms. All material provided within this platform—including but not limited to videos, audio recordings, presentation slides, written documents, illustrations, and any supporting digital or printed media—is the exclusive intellectual property of Xfini Academy for Nurses and its contributors. These materials are protected under national and international copyright legislation, including the Copyright and Related Rights Act, 2000 of Ireland and The Copyright Act, 1957 (as amended) of India.\n\nThis educational content is provided strictly for personal learning and professional development. Any attempt to download, copy, reproduce, screen-record, distribute, transmit, alter, adapt, translate, publicly display, or upload any part of the content to third-party platforms or social networks constitutes an infringement of copyright law. Sharing materials in any form, including via email, messaging services, cloud storage, or learning forums, without explicit, prior written consent from Xfini Academy for Nurses is strictly prohibited.\n\nSuch unauthorised actions are considered serious offences and may result in immediate revocation of access to all resources and services offered by Xfini Academy for Nurses. Furthermore, violators may face civil and criminal liability. Under Section 140 to 146 of the Irish Copyright and Related Rights Act, 2000, and Sections 63 to 70 of the Indian Copyright Act, 1957, copyright infringement may lead to legal proceedings, substantial financial penalties, and, in certain cases, imprisonment.\n\nAccess to the online classes and the application will be available only until your exam date. After that, all access will be cancelled immediately, regardless of whether you have taken a 16-day, 1-month, or 2-month course.Refunds will be processed only upon submission of valid supporting documents, and the refundable amount will be calculated after deducting the fees for the classes already attended and any applicable administrative charges.\n\nBy proceeding to access and use this platform, you confirm your understanding of and commitment to upholding these copyright conditions. You agree to respect the creative and intellectual efforts that underpin the development of these educational resources. If you are uncertain about any aspect of acceptable usage or if you wish to obtain permission for specific purposes, we urge you to contact  Xfini Academy for Nurses directly.\n\nCourse Continuity Policy\nOnce a student is enrolled in the course offered by Xfini Academy for Nurses, the course must be attended continuously without interruption. Freezing, pausing, postponing the course during the enrolled period is strictly not permitted under any circumstances, unless it is a medical emergency.\nStudents are expected to attend and complete the course within the allocated duration provided at the time of enrollment. Failure to continue the course regularly will not entitle the student to an extension, rescheduling, or additional access period. By enrolling in the programme, the student acknowledges and agrees to comply with this continuous learning policy.\n\nWe thank you for your cooperation in safeguarding the integrity of our educational assets and for contributing to a culture of respect, responsibility, and legal compliance.",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Your Recruiter’s Name(if not, give None)",
@@ -293,7 +316,28 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Xfini Academy – Student Attendance & Professional Conduct Policy\nAttendance Policy\nStudents are required to attend all online classes regularly and punctually. Continuous absence for 3 consecutive days without prior communication or approval will result in: Removal from the official student group Revocation of app/platform access Repeated irregular attendance or frequent class skipping may also lead to suspension or revocation of access. Attendance will be monitored automatically through the Zoom attendance system.\nProfessional Participation Guidelines\nStudents are expected to attend classes professionally and actively participate during sessions. Cameras should remain ON during classes unless a valid reason has been communicated in advance. Students temporarily unavailable (e.g., getting ready for work) must rejoin properly and inform faculty if necessary. By approximately 7:00 PM – 7:15 PM, students are expected to be fully attentive and actively participating.\nClassroom Conduct Rules\nAttending classes while driving is strictly prohibited due to safety concerns. Attending classes from bed or in an unprofessional manner is not acceptable. Students must maintain a respectful and professional learning environment at all times. Respect towards faculty, classmates, and the programme is mandatory.\nCommunication & Support\nStudents facing genuine issues affecting attendance or participation must inform the academy in advance. Appropriate support may be considered only when prior communication is provided.\nAcademy Expectations\nThese policies are implemented to maintain:\nDiscipline Professionalism Commitment to learning Better academic outcomes \nNegligence towards learning responsibilities will not be encouraged or accepted.",
+              "displayName": "Xfini Academy – Student Attendance & Professional Conduct Policy\nAttendance Policy\nStudents are required to attend all online classes regularly and punctually. Continuous absence for 3 consecutive days without prior communication or approval will result in: Removal from the official student group Revocation of app/platform access Repeated irregular attendance or frequent class skipping may also lead to suspension or revocation of access. Attendance will be monitored automatically through the Zoom attendance system.\nProfessional Participation Guidelines\nStudents are expected to attend classes professionally and actively participate during sessions. Cameras should remain ON during classes unless a valid reason has been communicated in advance. Students temporarily unavailable (e.g., getting ready for work) must rejoin properly and inform faculty if necessary. By approximately 7:00 PM – 7:15 PM, students are expected to be fully attentive and actively participating.\nClassroom Conduct Rules\nAttending classes while driving is strictly prohibited due to safety concerns. Attending classes from bed or in an unprofessional manner is not acceptable. Students must maintain a respectful and professional learning environment at all times. Respect towards faculty, classmates, and the programme is mandatory.\nCommunication & Support\nStudents facing genuine issues affecting attendance or participation must inform the academy in advance. Appropriate support may be considered only when prior communication is provided.\nAcademy Expectations\nThese policies are implemented to maintain:\nDiscipline Professionalism Commitment to learning Better academic outcomes \nNegligence towards learning responsibilities will not be encouraged or accepted.",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Your Immigration Status",
+              "displayName": "Your Immigration Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Column 11",
@@ -302,7 +346,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
               "id": "Status",
@@ -311,37 +356,8 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "success",
-              "displayName": "success",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
               "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "message",
-              "displayName": "message",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "user",
-              "displayName": "user",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
+              "removed": false
             },
             {
               "id": "row_number",
@@ -352,7 +368,7 @@
               "type": "number",
               "canBeUsedToMatch": true,
               "readOnly": true,
-              "removed": true
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -362,34 +378,366 @@
       },
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
-      "position": [1120, 64],
-      "id": "7f8c9329-d0b1-4985-aa4c-58e7faf86060",
-      "name": "Append or update row in sheet",
+      "position": [-224, 496],
+      "id": "f22ac96d-74d5-4519-9777-a1fcc153a301",
+      "name": "Update Row in Sheet1",
+      "retryOnFail": true,
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "Xqu19r2TYvpCVeRj",
+          "id": "RC4DOPgXj3g52wmR",
           "name": "Google Sheets account"
         }
       }
     },
     {
       "parameters": {
-        "fromEmail": "rahulbushi69@gmail.com",
-        "toEmail": "={{ $('Google Sheets Trigger').item.json['Email(This will be your username for the mobile app.)'] }}",
-        "subject": "Account Created For Xfini Academy New Admission",
-        "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Xfini Academy Admission</title>\n</head>\n\n<body style=\"margin:0;padding:0;background-color:#f4f6f9;font-family:Arial,sans-serif;\">\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#f4f6f9;padding:30px 0;\">\n<tr>\n<td align=\"center\">\n\n<table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#ffffff;border-radius:12px;overflow:hidden;\">\n\n<!-- Header -->\n<tr>\n<td align=\"center\" style=\"background:#0d6efd;padding:35px 20px;\">\n\n<h1 style=\"margin:0;color:#ffffff;font-size:30px;\">\nWelcome to Xfini Academy 🎉\n</h1>\n\n<p style=\"margin:12px 0 0;color:#dbe8ff;font-size:16px;\">\nYour admission has been successfully completed\n</p>\n\n</td>\n</tr>\n\n<!-- Body -->\n<tr>\n<td style=\"padding:40px 35px;color:#333333;\">\n\n<p style=\"font-size:16px;margin-top:0;\">\nHello\n<strong>\n{{ $('Google Sheets Trigger').item.json['First Name'] }}\n</strong>,\n</p>\n\n<p style=\"font-size:15px;line-height:1.8;\">\nWelcome to <strong>Xfini Academy</strong>.\nYour student account has been created successfully.\nPlease find your login credentials below.\n</p>\n\n<!-- Login Details -->\n<table width=\"100%\" cellpadding=\"12\" cellspacing=\"0\"\nstyle=\"margin-top:25px;border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb;\">\n\n<tr>\n<td width=\"35%\" style=\"font-weight:bold;\">\nUsername\n</td>\n\n<td>\n{{ $('Google Sheets Trigger').item.json['Email(This will be your username for the mobile app.)'] }}\n</td>\n</tr>\n\n<tr>\n<td style=\"font-weight:bold;\">\nPassword\n</td>\n\n<td>\nPass1234\n</td>\n</tr>\n\n<tr>\n<td style=\"font-weight:bold;\">\nDevice\n</td>\n\n<td>\n{{ $('Google Sheets Trigger').item.json['Which device are you using?'] }}\n</td>\n</tr>\n\n</table>\n\n<!-- Download Button -->\n<div style=\"margin-top:35px;text-align:center;\">\n\n<p style=\"font-size:16px;margin-bottom:20px;\">\nDownload the Xfini Academy App\n</p>\n\n<a href=\"{{ $('Google Sheets Trigger').item.json['Which device are you using?'] === 'Android' ? 'https://drive.google.com/file/d/1l1_do3eqXviEfTijWFD_usiV9qOleOpc/view?usp=sharing' : 'https://apps.apple.com/us/app/xfini-academy/id6749449976' }}\"\nstyle=\"background-color:#0d6efd;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;display:inline-block;font-size:16px;font-weight:bold;\">\n\n{{ $('Google Sheets Trigger').item.json['Which device are you using?'] === 'Android' ? 'Download Android App' : 'Download iPhone App' }}\n\n</a>\n\n</div>\n\n<!-- Instructions -->\n<div style=\"margin-top:40px;\">\n\n<h3 style=\"margin-bottom:10px;\">\nLogin Instructions\n</h3>\n\n<ul style=\"padding-left:20px;line-height:1.8;font-size:15px;\">\n<li>Install the mobile application using the button above.</li>\n<li>Login using your username and password.</li>\n<li>Change your password after first login for security.</li>\n</ul>\n\n</div>\n\n<!-- Support -->\n<div style=\"margin-top:35px;\">\n\n<p style=\"font-size:15px;line-height:1.8;\">\nIf you face any issues while logging in,\nplease contact the academy support team.\n</p>\n\n<p style=\"margin-top:30px;font-size:15px;\">\nRegards,<br>\n<strong>Xfini Academy Team</strong>\n</p>\n\n</div>\n\n</td>\n</tr>\n\n<!-- Footer -->\n<tr>\n<td align=\"center\"\nstyle=\"background:#f3f4f6;padding:20px;font-size:13px;color:#6b7280;\">\n\n© 2026 Xfini Academy. All Rights Reserved.\n\n</td>\n</tr>\n\n</table>\n\n</td>\n</tr>\n</table>\n\n</body>\n</html>",
+        "chatId": "-1003767953433",
+        "text": "={{ $('HTTP Request').item.json.success ? \n`✅ User Created Successfully\n\n👤 Name: ${$('Google Sheets Trigger').item.json['First Name']} ${$('Google Sheets Trigger').item.json['Last Name']}\n📧 Email: ${$('Google Sheets Trigger').item.json['Email(This will be your username for the mobile app.)']}\n🔑 Password: ${$('HTTP Request').item.json.password}`\n\n:\n\n`❌ User Creation Failed\n\n👤 Name: ${$('Google Sheets Trigger').item.json['First Name']} ${$('Google Sheets Trigger').item.json['Last Name']}\n📧 Email: ${$('Google Sheets Trigger').item.json['Email(This will be your username for the mobile app.)']}\n⚠️ Error Code: ${\n$('HTTP Request').item.json.error.message.match(/^(\\d+)/)?.[1] || '400'\n}\n⚠️ Reason: ${\nJSON.parse(\n  $('HTTP Request').item.json.error.message\n    .replace(/^400 - \"/, '')\n    .replace(/\"$/, '')\n    .replace(/\\\\\"/g, '\"')\n).error\n}`\n}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [0, 480],
+      "id": "44883e50-4533-487f-847b-72facf6342ed",
+      "name": "Send a text message",
+      "webhookId": "2e7566e6-9a6a-4f84-827e-e9711e0013a0",
+      "credentials": {
+        "telegramApi": {
+          "id": "iV6sGKin0R8pyhfu",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
         "options": {}
       },
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2.1,
-      "position": [1328, 64],
-      "id": "3bb13830-782b-4ba3-adac-90fcb0a66159",
-      "name": "Send an Email",
-      "webhookId": "b692e9de-7029-4e93-8dff-0a3a58a6944e",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [-1120, 256],
+      "id": "10eb1271-9bb7-41f0-ab72-0c55ec09ddd2",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node — place between the form-parsing node and the /create-student HTTP node.\n// Input: expects the form's \"Your Subscription period\" answer on $json.subscriptionPeriod\n// (rename to match your actual field key) and, if \"Other\" was picked, the free-text\n// value on $json.subscriptionPeriodOther.\n// Output: adds $json.planmonths set to the exact `name` stored in Firestore's\n// subscriptionPlans collection, so /create-student's `name == planmonths` match succeeds.\n\nconst FORM_TO_PLAN_NAME = {\n  '16 days': '16 DAYS PLAN',\n  '1 month': '1 MONTH PLAN',\n  '2 month': '2 MONTH PLAN',\n  '3 month': '3 MONTH PLAN',\n  '3 months': '3 MONTH PLAN',\n  '1 day': '1 day',\n  '365 days': '365 Days Plan',\n};\n\nconst raw = $input.first().json['Your Subscription period'];\nconst answer = raw === 'Other' ? $input.first().json['Your Subscription period'] : raw;\nconst planName = FORM_TO_PLAN_NAME[String(answer).trim().toLowerCase()];\n\nif (!planName) {\n  throw new Error(`No matching subscription plan for form answer: \"${answer}\"`);\n}\n\nreturn { ...$input, planmonths: planName };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-896, 256],
+      "id": "782b7b79-3148-4646-b716-03846195f169",
+      "name": "Code in JavaScript",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "guildId": {
+          "__rl": true,
+          "value": "1452636068535861300",
+          "mode": "list",
+          "cachedResultName": "ILLUM👁INATI",
+          "cachedResultUrl": "https://discord.com/channels/1452636068535861300"
+        },
+        "channelId": {
+          "__rl": true,
+          "value": "1530831929400758427",
+          "mode": "list",
+          "cachedResultName": "xfini-user-creation",
+          "cachedResultUrl": "https://discord.com/channels/1452636068535861300/1530831929400758427"
+        },
+        "content": "={{ $('HTTP Request').item.json.success ? \n`✅ User Created Successfully\n\n👤 Name: ${$('Google Sheets Trigger').item.json['First Name']} ${$('Google Sheets Trigger').item.json['Last Name']}\n📧 Email: ${$('Google Sheets Trigger').item.json['Email(This will be your username for the mobile app.)']}\n🔑 Password: ${$('HTTP Request').item.json.password}`\n\n:\n\n`❌ User Creation Failed\n\n👤 Name: ${$('Google Sheets Trigger').item.json['First Name']} ${$('Google Sheets Trigger').item.json['Last Name']}\n📧 Email: ${$('Google Sheets Trigger').item.json['Email(This will be your username for the mobile app.)']}\n⚠️ Error Code: ${\n$('HTTP Request').item.json.error.message.match(/^(\\d+)/)?.[1] || '400'\n}\n⚠️ Reason: ${\nJSON.parse(\n  $('HTTP Request').item.json.error.message\n    .replace(/^400 - \"/, '')\n    .replace(/\"$/, '')\n    .replace(/\\\\\"/g, '\"')\n).error\n}`\n}}",
+        "options": {},
+        "embeds": {
+          "values": []
+        },
+        "files": {
+          "values": []
+        }
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [0, 16],
+      "id": "bf214fe0-4274-4734-8eea-f52606d42173",
+      "name": "Send a message",
+      "webhookId": "2fadb3ee-3422-4f5b-92b5-483a6cb97a70",
       "credentials": {
-        "smtp": {
-          "id": "qjvVX8E8ri7qiJT3",
-          "name": "SMTP account"
+        "discordBotApi": {
+          "id": "A6xDpbG1wXvb3sFC",
+          "name": "xfini-bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "14ZmBBUGbytPeI-hqIaffZ71eUvj9Bdzzf8bkNfBKbZQ",
+          "mode": "list",
+          "cachedResultName": "   Briffini Academy New Admission (Responses)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14ZmBBUGbytPeI-hqIaffZ71eUvj9Bdzzf8bkNfBKbZQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1767212848,
+          "mode": "list",
+          "cachedResultName": "Form responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14ZmBBUGbytPeI-hqIaffZ71eUvj9Bdzzf8bkNfBKbZQ/edit#gid=1767212848"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "First Name": "={{ $('Google Sheets Trigger').item.json['First Name'] }}",
+            "Timestamp": "={{ $('Google Sheets Trigger').item.json.Timestamp }}",
+            "Last Name": "={{ $('Google Sheets Trigger').item.json['Last Name'] }}",
+            "Status": "Done",
+            "Email(This will be your username for the mobile app.)": "={{ $('Google Sheets Trigger').item.json['Email(This will be your username for the mobile app.)'] }}",
+            "row_number": 0
+          },
+          "matchingColumns": ["Email(This will be your username for the mobile app.)"],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "First Name",
+              "displayName": "First Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Last Name",
+              "displayName": "Last Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email(This will be your username for the mobile app.)",
+              "displayName": "Email(This will be your username for the mobile app.)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone Number(with country code)",
+              "displayName": "Phone Number(with country code)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Your Join Date in Briffini Academy",
+              "displayName": "Your Join Date in Briffini Academy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Your Practical Exam Date",
+              "displayName": "Your Practical Exam Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Your Subscription period",
+              "displayName": "Your Subscription period",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Which device are you using?",
+              "displayName": "Which device are you using?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Your Agency Name",
+              "displayName": "Your Agency Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Your Prospect Employer Name (if not, Give None)",
+              "displayName": "Your Prospect Employer Name (if not, Give None)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "                      Terms And Conditions\nWelcome to Xfini Academy for Nurses. By accessing this platform and engaging with any of its educational content, you acknowledge and agree to the following legally binding terms. All material provided within this platform—including but not limited to videos, audio recordings, presentation slides, written documents, illustrations, and any supporting digital or printed media—is the exclusive intellectual property of Xfini Academy for Nurses and its contributors. These materials are protected under national and international copyright legislation, including the Copyright and Related Rights Act, 2000 of Ireland and The Copyright Act, 1957 (as amended) of India.\n\nThis educational content is provided strictly for personal learning and professional development. Any attempt to download, copy, reproduce, screen-record, distribute, transmit, alter, adapt, translate, publicly display, or upload any part of the content to third-party platforms or social networks constitutes an infringement of copyright law. Sharing materials in any form, including via email, messaging services, cloud storage, or learning forums, without explicit, prior written consent from Xfini Academy for Nurses is strictly prohibited.\n\nSuch unauthorised actions are considered serious offences and may result in immediate revocation of access to all resources and services offered by Xfini Academy for Nurses. Furthermore, violators may face civil and criminal liability. Under Section 140 to 146 of the Irish Copyright and Related Rights Act, 2000, and Sections 63 to 70 of the Indian Copyright Act, 1957, copyright infringement may lead to legal proceedings, substantial financial penalties, and, in certain cases, imprisonment.\n\nAccess to the online classes and the application will be available only until your exam date. After that, all access will be cancelled immediately, regardless of whether you have taken a 16-day, 1-month, or 2-month course.Refunds will be processed only upon submission of valid supporting documents, and the refundable amount will be calculated after deducting the fees for the classes already attended and any applicable administrative charges.\n\nBy proceeding to access and use this platform, you confirm your understanding of and commitment to upholding these copyright conditions. You agree to respect the creative and intellectual efforts that underpin the development of these educational resources. If you are uncertain about any aspect of acceptable usage or if you wish to obtain permission for specific purposes, we urge you to contact  Xfini Academy for Nurses directly.\n\nCourse Continuity Policy\nOnce a student is enrolled in the course offered by Xfini Academy for Nurses, the course must be attended continuously without interruption. Freezing, pausing, postponing the course during the enrolled period is strictly not permitted under any circumstances, unless it is a medical emergency.\nStudents are expected to attend and complete the course within the allocated duration provided at the time of enrollment. Failure to continue the course regularly will not entitle the student to an extension, rescheduling, or additional access period. By enrolling in the programme, the student acknowledges and agrees to comply with this continuous learning policy.\n\nWe thank you for your cooperation in safeguarding the integrity of our educational assets and for contributing to a culture of respect, responsibility, and legal compliance.",
+              "displayName": "                      Terms And Conditions\nWelcome to Xfini Academy for Nurses. By accessing this platform and engaging with any of its educational content, you acknowledge and agree to the following legally binding terms. All material provided within this platform—including but not limited to videos, audio recordings, presentation slides, written documents, illustrations, and any supporting digital or printed media—is the exclusive intellectual property of Xfini Academy for Nurses and its contributors. These materials are protected under national and international copyright legislation, including the Copyright and Related Rights Act, 2000 of Ireland and The Copyright Act, 1957 (as amended) of India.\n\nThis educational content is provided strictly for personal learning and professional development. Any attempt to download, copy, reproduce, screen-record, distribute, transmit, alter, adapt, translate, publicly display, or upload any part of the content to third-party platforms or social networks constitutes an infringement of copyright law. Sharing materials in any form, including via email, messaging services, cloud storage, or learning forums, without explicit, prior written consent from Xfini Academy for Nurses is strictly prohibited.\n\nSuch unauthorised actions are considered serious offences and may result in immediate revocation of access to all resources and services offered by Xfini Academy for Nurses. Furthermore, violators may face civil and criminal liability. Under Section 140 to 146 of the Irish Copyright and Related Rights Act, 2000, and Sections 63 to 70 of the Indian Copyright Act, 1957, copyright infringement may lead to legal proceedings, substantial financial penalties, and, in certain cases, imprisonment.\n\nAccess to the online classes and the application will be available only until your exam date. After that, all access will be cancelled immediately, regardless of whether you have taken a 16-day, 1-month, or 2-month course.Refunds will be processed only upon submission of valid supporting documents, and the refundable amount will be calculated after deducting the fees for the classes already attended and any applicable administrative charges.\n\nBy proceeding to access and use this platform, you confirm your understanding of and commitment to upholding these copyright conditions. You agree to respect the creative and intellectual efforts that underpin the development of these educational resources. If you are uncertain about any aspect of acceptable usage or if you wish to obtain permission for specific purposes, we urge you to contact  Xfini Academy for Nurses directly.\n\nCourse Continuity Policy\nOnce a student is enrolled in the course offered by Xfini Academy for Nurses, the course must be attended continuously without interruption. Freezing, pausing, postponing the course during the enrolled period is strictly not permitted under any circumstances, unless it is a medical emergency.\nStudents are expected to attend and complete the course within the allocated duration provided at the time of enrollment. Failure to continue the course regularly will not entitle the student to an extension, rescheduling, or additional access period. By enrolling in the programme, the student acknowledges and agrees to comply with this continuous learning policy.\n\nWe thank you for your cooperation in safeguarding the integrity of our educational assets and for contributing to a culture of respect, responsibility, and legal compliance.",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Your Recruiter’s Name(if not, give None)",
+              "displayName": "Your Recruiter’s Name(if not, give None)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Xfini Academy – Student Attendance & Professional Conduct Policy\nAttendance Policy\nStudents are required to attend all online classes regularly and punctually. Continuous absence for 3 consecutive days without prior communication or approval will result in: Removal from the official student group Revocation of app/platform access Repeated irregular attendance or frequent class skipping may also lead to suspension or revocation of access. Attendance will be monitored automatically through the Zoom attendance system.\nProfessional Participation Guidelines\nStudents are expected to attend classes professionally and actively participate during sessions. Cameras should remain ON during classes unless a valid reason has been communicated in advance. Students temporarily unavailable (e.g., getting ready for work) must rejoin properly and inform faculty if necessary. By approximately 7:00 PM – 7:15 PM, students are expected to be fully attentive and actively participating.\nClassroom Conduct Rules\nAttending classes while driving is strictly prohibited due to safety concerns. Attending classes from bed or in an unprofessional manner is not acceptable. Students must maintain a respectful and professional learning environment at all times. Respect towards faculty, classmates, and the programme is mandatory.\nCommunication & Support\nStudents facing genuine issues affecting attendance or participation must inform the academy in advance. Appropriate support may be considered only when prior communication is provided.\nAcademy Expectations\nThese policies are implemented to maintain:\nDiscipline Professionalism Commitment to learning Better academic outcomes \nNegligence towards learning responsibilities will not be encouraged or accepted.",
+              "displayName": "Xfini Academy – Student Attendance & Professional Conduct Policy\nAttendance Policy\nStudents are required to attend all online classes regularly and punctually. Continuous absence for 3 consecutive days without prior communication or approval will result in: Removal from the official student group Revocation of app/platform access Repeated irregular attendance or frequent class skipping may also lead to suspension or revocation of access. Attendance will be monitored automatically through the Zoom attendance system.\nProfessional Participation Guidelines\nStudents are expected to attend classes professionally and actively participate during sessions. Cameras should remain ON during classes unless a valid reason has been communicated in advance. Students temporarily unavailable (e.g., getting ready for work) must rejoin properly and inform faculty if necessary. By approximately 7:00 PM – 7:15 PM, students are expected to be fully attentive and actively participating.\nClassroom Conduct Rules\nAttending classes while driving is strictly prohibited due to safety concerns. Attending classes from bed or in an unprofessional manner is not acceptable. Students must maintain a respectful and professional learning environment at all times. Respect towards faculty, classmates, and the programme is mandatory.\nCommunication & Support\nStudents facing genuine issues affecting attendance or participation must inform the academy in advance. Appropriate support may be considered only when prior communication is provided.\nAcademy Expectations\nThese policies are implemented to maintain:\nDiscipline Professionalism Commitment to learning Better academic outcomes \nNegligence towards learning responsibilities will not be encouraged or accepted.",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Your Immigration Status",
+              "displayName": "Your Immigration Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Column 11",
+              "displayName": "Column 11",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [-224, 112],
+      "id": "12cb8913-03a2-4865-8e97-d203127a812b",
+      "name": "Update Row True",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RC4DOPgXj3g52wmR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json['Email(This will be your username for the mobile app.)'] }}",
+        "subject": "Account Created For Xfini Academy New Admission",
+        "message": "=<!DOCTYPE html> <html lang=\"en\"> <head>   <meta charset=\"UTF-8\" />   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/>   <title>Xfini Academy Admission</title> </head>  <body style=\"margin:0;padding:0;background-color:#f4f6f9;font-family:Arial,sans-serif;\">  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#f4f6f9;padding:30px 0;\"> <tr> <td align=\"center\">  <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#ffffff;border-radius:12px;overflow:hidden;\">  <!-- Header --> <tr> <td align=\"center\" style=\"background:#0d6efd;padding:35px 20px;\">  <!-- Logo <img  src=\"https://collection.cloudinary.com/dlxafuiau/578df0d6cf93bf620cdee2e776239ccd\" alt=\"Xfini Academy Logo\" width=\"120\" style=\"display:block;margin-bottom:18px;\" />  -->  <h1 style=\"margin:0;color:#ffffff;font-size:30px;\"> Welcome to Xfini Academy 🎉 </h1>  <p style=\"margin:12px 0 0;color:#dbe8ff;font-size:16px;\"> Your admission has been successfully completed </p>  </td> </tr>  <!-- Body --> <tr> <td style=\"padding:40px 35px;color:#333333;\">  <p style=\"font-size:16px;margin-top:0;\"> Hello <strong>{{ $('HTTP Request').item.json.displayName }}</strong>, </p>  <p style=\"font-size:15px;line-height:1.8;\"> Welcome to <strong>Xfini Academy</strong>. Your student account has been created successfully. Please find your login credentials below. </p>  <!-- Login Details --> <table width=\"100%\" cellpadding=\"12\" cellspacing=\"0\" style=\"margin-top:25px;border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb;\">  <tr> <td width=\"35%\" style=\"font-weight:bold;\"> Username </td>  <td> {{ $('Google Sheets Trigger').item.json['Email(This will be your username for the mobile app.)'] }} </td> </tr>  <tr> <td style=\"font-weight:bold;\"> Password </td>  <td> {{ $('HTTP Request').item.json.password }} </td> </tr>  <tr> <td style=\"font-weight:bold;\"> Device </td>  <td> {{ $('Google Sheets Trigger').item.json['Which device are you using?'] }} </td> </tr>  </table>  <!-- Download Button --> <div style=\"margin-top:35px;text-align:center;\">  <p style=\"font-size:16px;margin-bottom:20px;\"> Download the Xfini Academy App </p>  <a href=\"{{ $('Google Sheets Trigger').item.json['Which device are you using?'] === 'Android' ? 'https://drive.google.com/file/d/1l1_do3eqXviEfTijWFD_usiV9qOleOpc/view?usp=sharing' : 'https://apps.apple.com/us/app/xfini-academy/id6749449976' }}\" style=\"background-color:#0d6efd;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;display:inline-block;font-size:16px;font-weight:bold;\">  {{ $('Google Sheets Trigger').item.json['Which device are you using?'] === 'Android' ? 'Download Android App' : 'Download iPhone App' }}  </a>  </div>  <!-- Instructions --> <div style=\"margin-top:40px;\">  <h3 style=\"margin-bottom:10px;color:#111827;\"> Login Instructions </h3>  <ul style=\"padding-left:20px;line-height:1.8;font-size:15px;color:#4b5563;\"> <li>Install the mobile application using the button above.</li> <li>Login using your username and password.</li> <li>Change your password after first login for security.</li> </ul>  </div>  <!-- Support --> <div style=\"margin-top:35px;\">  <p style=\"font-size:15px;line-height:1.8;color:#4b5563;\"> If you face any issues while logging in, please contact the academy support team. </p>  <p style=\"margin-top:30px;font-size:15px;color:#111827;\"> Regards,<br> <strong>Xfini Academy Team</strong> </p>  </div>  </td> </tr>  <!-- Social Media Section --> <tr> <td align=\"center\" style=\"padding:30px 20px 10px 20px;background:#ffffff;\">  <p style=\"margin:0 0 15px;font-size:15px;color:#374151;font-weight:bold;\"> Follow Us On </p>  <!-- Instagram --> <a href=\"https://www.instagram.com/xfini_academy_\" target=\"_blank\" style=\"margin:0 10px;text-decoration:none;\">  <img  src=\"https://cdn-icons-png.flaticon.com/512/2111/2111463.png\" alt=\"Instagram\" width=\"38\" style=\"vertical-align:middle;border:0;\" />  </a>  <!-- Facebook --> <a href=\"https://www.facebook.com/share/1J63bGURqd/\" target=\"_blank\" style=\"margin:0 10px;text-decoration:none;\">  <img  src=\"https://cdn-icons-png.flaticon.com/512/733/733547.png\" alt=\"Facebook\" width=\"38\" style=\"vertical-align:middle;border:0;\" />  </a>  </td> </tr>  <!-- Footer --> <tr> <td align=\"center\" style=\"background:#f3f4f6;padding:20px;font-size:13px;color:#6b7280;line-height:1.8;\">  © 2026 Xfini Academy. All Rights Reserved.<br> Empowering Students Through Smart Learning.  </td> </tr>  </table>  </td> </tr> </table>  </body> </html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [0, 208],
+      "id": "839c7645-cde4-44c5-9c66-acac2b15c9b2",
+      "name": "Send an Email To Team Stating registration Success",
+      "webhookId": "86a1ae86-d3ba-4b11-9329-1855b3479cae",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "qKuSvi7d5af8O7vI",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "mahesh.m.chandran+xfini@gmail.com, abrahul02+xfini@gmail.com",
+        "subject": "Xfini Academy - User Creation Failed",
+        "message": "=<!DOCTYPE html> <html lang=\"en\">  <head> <meta charset=\"UTF-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/> <title>User Creation Failed</title> </head>  <body style=\"margin:0;padding:0;background-color:#f4f6f9;font-family:Arial,sans-serif;\">  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#f4f6f9;padding:30px 0;\">  <tr> <td align=\"center\">  <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\" background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08); \">  <!-- HEADER --> <tr> <td align=\"center\" style=\"background:#dc3545;padding:35px 20px;\">  <h1 style=\" margin:0; color:#ffffff; font-size:28px; font-weight:bold; \"> User Creation Failed ❌ </h1>  <p style=\" margin:12px 0 0; color:#ffe5e5; font-size:16px; line-height:1.6; \"> A new student registration could not be completed </p>  </td> </tr>  <!-- BODY --> <tr> <td style=\"padding:40px 35px;color:#333333;\">  <p style=\"font-size:16px;margin-top:0;\"> Hello Team, </p>  <p style=\" font-size:15px; line-height:1.8; color:#4b5563; \"> The system failed to create a new user account for <strong>Xfini Academy</strong>. Please review the registration details below. </p>  <!-- STUDENT DETAILS --> <table width=\"100%\" cellpadding=\"12\" cellspacing=\"0\" style=\" margin-top:25px; border:1px solid #e5e7eb; border-radius:10px; background:#f9fafb; \">  <tr> <td width=\"35%\" style=\"font-weight:bold;color:#111827;\"> Student Name </td>  <td style=\"color:#374151;\"> {{ $('Google Sheets Trigger').item.json['First Name'] }} {{ $('Google Sheets Trigger').item.json['Last Name'] }} </td> </tr>  <tr> <td style=\"font-weight:bold;color:#111827;\"> Email </td>  <td style=\"color:#374151;\"> {{ $('Google Sheets Trigger').item.json['Email(This will be your username for the mobile app.)'] }} </td> </tr>  <tr> <td style=\"font-weight:bold;color:#111827;\"> Phone </td>  <td style=\"color:#374151;\"> {{ $('Google Sheets Trigger').item.json['Phone Number(with country code )'] }} </td> </tr>  <tr> <td style=\"font-weight:bold;color:#111827;\"> Device </td>  <td style=\"color:#374151;\"> {{ $('Google Sheets Trigger').item.json['Which device are you using?'] }} </td> </tr>  <tr> <td style=\"font-weight:bold;color:#111827;\"> Plan </td>  <td style=\"color:#374151;\"> {{ $('Google Sheets Trigger').item.json['Your Subscription period'] }} </td> </tr>  <tr> <td style=\"font-weight:bold;color:#111827;\"> Timestamp </td>  <td style=\"color:#374151;\"> {{ $('Google Sheets Trigger').item.json['Timestamp'] }} </td> </tr>  </table>  <!-- ERROR DETAILS --> <div style=\"margin-top:35px;\">  <h3 style=\" margin-bottom:12px; color:#991b1b; font-size:20px; \"> Error Details </h3>  <table width=\"100%\" cellpadding=\"12\" cellspacing=\"0\" style=\" background:#fff5f5; border:1px solid #fecaca; border-radius:10px; \">  <tr> <td width=\"30%\" style=\" font-weight:bold; color:#991b1b; \"> Error Code </td>  <td style=\" color:#dc2626; word-break:break-word; \"> {{ $('HTTP Request').item.json.code || 'AUTH_FAILED' }} </td> </tr>  <tr> <td style=\" font-weight:bold; color:#991b1b; \"> Message </td>  <td style=\" color:#dc2626; line-height:1.7; word-break:break-word; \"> {{ JSON.parse(   $('HTTP Request').item.json.error.message     .replace(/^400 - \"/, '')     .replace(/\"$/, '')     .replace(/\\\\\"/g, '\"') ).error }} </td> </tr>  </table>  </div>  <!-- SUGGESTED CHECKS --> <div style=\"margin-top:35px;\">  <h3 style=\" margin-bottom:12px; color:#111827; font-size:20px; \"> Suggested Checks </h3>  <ul style=\" padding-left:20px; line-height:1.9; font-size:15px; color:#4b5563; \">  <li>Verify whether the email already exists in Firebase Authentication</li>  <li>Check Firebase Admin SDK/service account configuration</li>  <li>Validate email format and required fields</li>  <li>Check backend API availability and logs</li>  <li>Review authentication quotas or restrictions</li>  </ul>  </div>  <!-- FOOTER TEXT --> <div style=\"margin-top:40px;\">  <p style=\" font-size:15px; color:#111827; line-height:1.8; \"> Regards,<br> <strong>Xfini Academy Automation System</strong> </p>  </div>  </td> </tr>  <!-- FOOTER --> <tr> <td align=\"center\" style=\" background:#f3f4f6; padding:20px; font-size:13px; color:#6b7280; line-height:1.8; \">  © 2026 Xfini Academy Internal Notification System  </td> </tr>  </table>  </td> </tr>  </table>  </body> </html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [0, 688],
+      "id": "3b31fcc4-49f0-4efb-94e8-40b78183303e",
+      "name": "Send an Email To Team Stating registration Failed",
+      "webhookId": "d4e50537-1bc1-4ee2-b69a-4d6f97ed75f1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "qKuSvi7d5af8O7vI",
+          "name": "Gmail account"
         }
       }
     }
@@ -400,19 +748,7 @@
       "main": [
         [
           {
-            "node": "If",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If": {
-      "main": [
-        [],
-        [
-          {
-            "node": "HTTP Request",
+            "node": "Check if User Is Already Created Or Not",
             "type": "main",
             "index": 0
           }
@@ -423,57 +759,154 @@
       "main": [
         [
           {
-            "node": "If1",
+            "node": "Check if POST Failed Or Not",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "If1": {
+    "Check if User Is Already Created Or Not": {
       "main": [
+        [],
         [
           {
-            "node": "Edit Fields",
+            "node": "Loop Over Items",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Edit Fields": {
+    "Check if POST Failed Or Not": {
       "main": [
         [
           {
-            "node": "Append or update row in sheet",
+            "node": "Update Row True",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Row in Sheet1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Append or update row in sheet": {
+    "Update Row in Sheet1": {
       "main": [
         [
           {
-            "node": "Send an Email",
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send an Email To Team Stating registration Failed",
             "type": "main",
             "index": 0
           }
         ]
       ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Check if User Is Already Created Or Not",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Row True": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send an Email To Team Stating registration Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an Email To Team Stating registration Success": {
+      "main": [[]]
+    },
+    "Send an Email To Team Stating registration Failed": {
+      "main": [[]]
     }
   },
   "active": true,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "3z1OacBXH6EEWnxC",
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "e18d2472-d771-4bcd-9c5c-28045597d2ad",
+  "versionId": "b9710109-68d7-4791-a561-661bf9c9b873",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "1eed459817683b24632383594d62cd681204e6b89aeb44bce3364755a14f158f"
+    "instanceId": "cb57639c2801ce54c04da9cc75e1e3e6d72a811b96e1652d94ffbe5dcbba2dbc"
   },
-  "id": "16ainkEVeVNJDccJ",
-  "tags": []
+  "nodeGroups": [],
+  "id": "UT31Lz2K6yJn4FnJ",
+  "tags": [
+    {
+      "updatedAt": "2026-07-17T04:30:01.350Z",
+      "createdAt": "2026-07-17T04:29:50.447Z",
+      "id": "KGvn8dMBvhYlg97F",
+      "name": "Xfinia User Creation"
+    },
+    {
+      "updatedAt": "2026-07-17T04:29:42.505Z",
+      "createdAt": "2026-07-17T04:29:42.505Z",
+      "id": "rYw13DOossf0SD66",
+      "name": "Data Fetch"
+    }
+  ]
 }

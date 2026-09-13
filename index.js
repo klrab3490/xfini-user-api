@@ -60,7 +60,7 @@ app.use((req, res, next) => {
 
   res.on('finish', () => {
     const ms = Date.now() - start;
-    const status = res.statusCode;
+    const status = res.locals.actualStatusCode || res.statusCode;
     const color = status < 400 ? '\x1b[32m' : '\x1b[31m';
     const reset = '\x1b[0m';
     const label = status < 400 ? 'SUCCESS' : 'FAILED';
@@ -76,6 +76,35 @@ app.use((req, res, next) => {
       }
     }
   });
+
+  next();
+});
+
+// If client (such as n8n) sends "axios: true", suppress 4xx/5xx HTTP status codes
+// and respond with HTTP 200 so n8n's Axios library does not throw an AxiosError string.
+app.use((req, res, next) => {
+  const wantsStatus200 =
+    req.headers['axios'] === 'true' || req.headers['x-axios'] === 'true' || req.query.suppressStatus === 'true';
+
+  if (wantsStatus200) {
+    const origStatus = res.status.bind(res);
+    res.status = (code) => {
+      res.locals.actualStatusCode = code;
+      return res;
+    };
+
+    const origJson = res.json.bind(res);
+    res.json = (data) => {
+      origStatus(200);
+      return origJson(data);
+    };
+
+    const origSend = res.send.bind(res);
+    res.send = (body) => {
+      origStatus(200);
+      return origSend(body);
+    };
+  }
 
   next();
 });
