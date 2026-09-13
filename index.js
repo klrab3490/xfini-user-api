@@ -393,7 +393,7 @@ function makeStudentResponse(overrides = {}) {
     password: null,
     role: null,
     planName: null,
-    
+
     planId: null,
     subscriptionId: null,
     assignedCourses: 0,
@@ -417,10 +417,8 @@ app.post('/create-student', async (req, res) => {
           .replace(/\b\w/g, (c) => c.toUpperCase())
       : '';
 
-  const displayName =
-    firstName && lastName ? `${toProper(firstName)} ${toProper(lastName)}` : null;
-  const password =
-    typeof firstName === 'string' && firstName.trim() ? `${firstName.trim().toLowerCase()}@123` : null;
+  const displayName = firstName && lastName ? `${toProper(firstName)} ${toProper(lastName)}` : null;
+  const password = typeof firstName === 'string' && firstName.trim() ? `${firstName.trim().toLowerCase()}@123` : null;
 
   // Step 1 — Validate input
   if (!firstName || !lastName || !email || !planmonths || !role) {
