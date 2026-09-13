@@ -1,6 +1,7 @@
 services:
   xfini-user-api:
     image: ${DOCKER_IMAGE:-ghcr.io/xfini-academy/xfini-user-api:latest}
+    container_name: xfini-user-api
     pull_policy: always
     ports:
       - '5677:3001'
@@ -31,6 +32,7 @@ services:
 
   watchtower:
     image: ghcr.io/nicholas-fedor/watchtower:latest
+    container_name: watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
@@ -41,6 +43,7 @@ services:
 
   ngrok:
     image: ngrok/ngrok:latest
+    container_name: ngrok
     command: http --url=${NGROK_DOMAIN} http://n8n:5678
     ports:
       - '4040:4040'
@@ -53,6 +56,7 @@ services:
 
   n8n:
     image: n8nio/n8n:latest
+    container_name: n8n
     ports:
       - '5678:5678'
     environment:

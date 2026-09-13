@@ -1,6 +1,7 @@
 services:
-  user-api:
+  xfini-user-api:
     build: .
+    container_name: xfini-user-api
     ports:
       - '5677:3001'
     environment:
@@ -28,6 +29,7 @@ services:
 
   n8n:
     image: n8nio/n8n:latest
+    container_name: n8n
     ports:
       - '5678:5678'
     environment:
@@ -39,7 +41,7 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
-      - user-api
+      - xfini-user-api
     healthcheck:
       test: ['CMD-SHELL', 'nc -z localhost 5678 || exit 1']
       interval: 5s
@@ -50,6 +52,7 @@ services:
 
   ngrok:
     image: ngrok/ngrok:latest
+    container_name: ngrok
     command: http --url=${NGROK_DOMAIN} http://n8n:5678
     ports:
       - '4040:4040'

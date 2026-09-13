@@ -37,7 +37,7 @@ Three separate compose files, pick one depending on the target:
 | `docker-compose.server.yml` | Server deploy built from local source (`build: .`) instead of the GHCR image — same `n8n` + `ngrok`, no Watchtower                     |
 | `docker-compose.local.yml`  | Local dev — builds from source, runs `n8n` only, no `ngrok`/Watchtower                                                                 |
 
-All three define `xfini-user-api` (or `user-api` in `docker-compose.server.yml`) on host port `5677` (mapped to container `3001`), `n8n` on `5678`, and persist `/stats` data via the `xfini_stats_data` named volume. Env vars are passed explicitly via `environment:` — no `env_file`.
+All three define `xfini-user-api` on host port `5677` (mapped to container `3001`), `n8n` on `5678`, and persist `/stats` data via the `xfini_stats_data` named volume. Env vars are passed explicitly via `environment:` — no `env_file`.
 
 ```bash
 docker compose up --build                              # docker-compose.yml

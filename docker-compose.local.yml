@@ -1,6 +1,7 @@
 services:
   xfini-user-api:
     build: .
+    container_name: xfini-user-api
     ports:
       - '5677:3001'
     environment:
@@ -28,6 +29,7 @@ services:
 
   n8n:
     image: n8nio/n8n:latest
+    container_name: n8n
     ports:
       - '5678:5678'
     environment:
